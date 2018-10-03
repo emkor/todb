@@ -21,7 +21,7 @@ setup(
     install_requires=REQUIREMENTS,
     entry_points={
         'console_scripts': [
-            'todb = todb.main:main'
+            'todb = todb.main:cli_main'
         ]
     }
 )
