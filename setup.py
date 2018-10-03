@@ -18,5 +18,10 @@ setup(
     author_email="emkor93@gmail.com",
     url="https://github.com/emkor/todb",
     packages=find_packages(),
-    install_requires=REQUIREMENTS
+    install_requires=REQUIREMENTS,
+    entry_points={
+        'console_scripts': [
+            'todb = todb.main:main'
+        ]
+    }
 )
