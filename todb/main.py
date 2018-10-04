@@ -14,23 +14,31 @@ def _parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def main(args: argparse.Namespace) -> None:
-    start_time = datetime.utcnow()
-    print("Running with: {}!".format(args))
+def cli_main() -> None:
+    args = _parse_args()
+    main(args)
 
+
+def main(args: argparse.Namespace) -> None:
     if args.config is not None and path.exists(args.config) \
             and args.model is not None and path.exists(args.model) \
             and args.input is not None and path.exists(args.input):
         try:
+            start_time = datetime.utcnow()
+            print("Running with: {}!".format(args))
+            input_file_size = path.getsize(args.input)
             to_db(config_file_name=args.config, model_file_name=args.model, input_file_name=args.input)
+            took_seconds = seconds_between(start_time)
+            velocity_kBps = (input_file_size / 1000) / took_seconds
+            print("Done in {:2.3f}s ({:3.1f} kB/s)!".format(took_seconds, velocity_kBps))
         except Exception as e:
             print("Error: {}".format(e))
-            exit(1)
-
-    print("Done in {:2.3f}s!".format(seconds_between(start_time)))
-    exit(0)
+            exit(2)
+    else:
+        print("Did not provide config, model or input or those files does not exist.")
+        exit(1)
 
 
 if __name__ == "__main__":
-    args = _parse_args()
-    main(args)
+    cli_main()
+    exit(0)
