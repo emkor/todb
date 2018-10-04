@@ -10,6 +10,7 @@ class CsvParser(object):
     def read_rows_in_chunks(self, file_path: str) -> Iterator[List[str]]:
         buffer_size_bytes = round(self.todb_config.parsing_buffer_size_kB() * 1000, ndigits=None)
         cached_last_line = ""
+        has_header = self.todb_config.has_header()
         with open(file_path, "rb") as input_file:
             while True:
                 data = input_file.read(buffer_size_bytes)
@@ -18,5 +19,8 @@ class CsvParser(object):
                 one_line = cached_last_line + data.decode(self.todb_config.file_encoding())
                 rows = one_line.split(self.todb_config.row_delimiter())
                 cached_last_line = rows.pop(-1)  # last line may not be complete up to row delimiter!
+                if has_header:
+                    rows.pop(0)  # remove first row as header and don't remove it again
+                    has_header = False
                 yield rows
             yield [cached_last_line] if cached_last_line else []  # don't forget last cached line
