@@ -1,27 +1,17 @@
 import argparse
 from datetime import datetime
 from os import path
-from typing import List
 
-from sqlalchemy import MetaData
-
-from todb.config import ToDbConfig, config_from_file
-from todb.data_types import parse_model_file, ConfColumn
-from todb.db_engine import sql_table_from_columns, get_db_engine
+from todb.to_db import to_db
 from todb.util import seconds_between
 
 
-def parse_args() -> argparse.Namespace:
+def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description='Import CSV/TSV files into any SQL DB system')
     parser.add_argument('config', type=str, help='File containing parsing config')
     parser.add_argument('model', type=str, help='File containing model of CSV data')
     parser.add_argument('input', type=str, help='A CSV/TSV file to import into DB')
     return parser.parse_args()
-
-
-def cli_main() -> None:
-    args = parse_args()
-    main(args)
 
 
 def main(args: argparse.Namespace) -> None:
@@ -31,25 +21,16 @@ def main(args: argparse.Namespace) -> None:
     if args.config is not None and path.exists(args.config) \
             and args.model is not None and path.exists(args.model) \
             and args.input is not None and path.exists(args.input):
-        config = config_from_file(args.config)
-        print("Parsed config to: {}".format(config))
-
-        columns = parse_model_file(args.model)
-        print("Parsed model columns: {}".format(columns))
-
-        current_time = start_time.replace(microsecond=0).time().isoformat()
-        table_name = "todb_{}_{}".format(path.basename(args.input), current_time)
-        _register_db_tables(table_name, columns, config)
+        try:
+            to_db(config_file_name=args.config, model_file_name=args.model, input_file_name=args.input)
+        except Exception as e:
+            print("Error: {}".format(e))
+            exit(1)
 
     print("Done in {:2.3f}s!".format(seconds_between(start_time)))
-
-
-def _register_db_tables(table_name: str, columns: List[ConfColumn], config: ToDbConfig):
-    db_engine = get_db_engine(todb_config=config)
-    sql_meta = MetaData()
-    sql_table_from_columns(sql_meta, table_name, columns)
-    sql_meta.create_all(db_engine)
+    exit(0)
 
 
 if __name__ == "__main__":
-    cli_main()
+    args = _parse_args()
+    main(args)
