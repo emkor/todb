@@ -9,6 +9,7 @@ DEFAULT_ROW_DELIMITER = "\n"
 DEFAULT_CELL_DELIMITER = ","
 DEFAULT_PARSING_BUFFER_SIZE_kB = 1000
 DEFAULT_PARSING_CONCURRENCY = 4
+DEFAULT_DB_TYPE = "sqlite"
 DEFAULT_DB_HOST = "localhost"
 DEFAULT_DB_PORT = 3306
 DEFAULT_DB_USER = "user"
@@ -43,6 +44,9 @@ class ToDbConfig(Model):
 
     def parsing_concurrency(self) -> int:
         return int(self.conf_dict.get("parsing", {}).get("concurrency", DEFAULT_PARSING_CONCURRENCY))
+
+    def db_type(self) -> str:
+        return str(self.conf_dict.get("db", {}).get("type", DEFAULT_DB_TYPE))
 
     def db_host(self) -> str:
         return str(self.conf_dict.get("db", {}).get("host", DEFAULT_DB_HOST))

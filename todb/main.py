@@ -1,10 +1,13 @@
 import argparse
-import json
 from datetime import datetime
 from os import path
+from typing import List
+
+from sqlalchemy import MetaData
 
 from todb.config import ToDbConfig
-from todb.data_types import parse_model_file
+from todb.data_types import parse_model_file, ConfColumn
+from todb.db_engine import sql_table_from_columns, get_db_engine
 from todb.util import seconds_between
 
 
@@ -25,13 +28,26 @@ def main(args: argparse.Namespace) -> None:
     start_time = datetime.utcnow()
     print("Running with: {}!".format(args))
 
-    config = ToDbConfig.from_file(args.config) if args.config is not None and path.exists(args.config) else ToDbConfig({})
-    print("Parsed config to: {}".format(config))
+    if args.config is not None and path.exists(args.config) \
+            and args.model is not None and path.exists(args.model) \
+            and args.input is not None and path.exists(args.input):
+        config = ToDbConfig.from_file(args.config)  # type: ToDbConfig
+        print("Parsed config to: {}".format(config))
 
-    columns = parse_model_file(args.model) if args.model is not None and path.exists(args.model) else []
-    print("Parsed model columns: {}".format(columns))
+        columns = parse_model_file(args.model)
+        print("Parsed model columns: {}".format(columns))
+
+        table_name = path.basename(args.input)
+        _register_db_tables(table_name, columns, config)
 
     print("Done in {:2.3f}s!".format(seconds_between(start_time)))
+
+
+def _register_db_tables(table_name: str, columns: List[ConfColumn], config: ToDbConfig):
+    db_engine = get_db_engine(todb_config=config)
+    sql_meta = MetaData()
+    sql_table_from_columns(sql_meta, table_name, columns)
+    sql_meta.create_all(db_engine)
 
 
 if __name__ == "__main__":
