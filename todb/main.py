@@ -5,7 +5,7 @@ from typing import List
 
 from sqlalchemy import MetaData
 
-from todb.config import ToDbConfig
+from todb.config import ToDbConfig, config_from_file
 from todb.data_types import parse_model_file, ConfColumn
 from todb.db_engine import sql_table_from_columns, get_db_engine
 from todb.util import seconds_between
@@ -31,7 +31,7 @@ def main(args: argparse.Namespace) -> None:
     if args.config is not None and path.exists(args.config) \
             and args.model is not None and path.exists(args.model) \
             and args.input is not None and path.exists(args.input):
-        config = ToDbConfig.from_file(args.config)  # type: ToDbConfig
+        config = config_from_file(args.config)
         print("Parsed config to: {}".format(config))
 
         columns = parse_model_file(args.model)

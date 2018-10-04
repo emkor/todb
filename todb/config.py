@@ -18,12 +18,6 @@ DEFAULT_DB_DATABASE = "default"
 
 
 class ToDbConfig(Model):
-    @classmethod
-    def from_file(cls, file_path: str) -> Model:
-        with open(file_path, "r") as json_file:
-            config_dict = json.load(json_file)
-        return ToDbConfig(config_dict)
-
     def __init__(self, conf_dict: Dict[Text, Any]) -> None:
         self.conf_dict = conf_dict
 
@@ -62,3 +56,9 @@ class ToDbConfig(Model):
 
     def db_database(self) -> str:
         return str(self.conf_dict.get("db", {}).get("database", DEFAULT_DB_DATABASE))
+
+
+def config_from_file(file_path: str) -> ToDbConfig:
+    with open(file_path, "r") as json_file:
+        config_dict = json.load(json_file)
+    return ToDbConfig(config_dict)
