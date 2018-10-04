@@ -12,7 +12,7 @@ CUSTOM_JSON = """
     "cell_delimiter": "\\t"
   },
   "parsing": {
-    "buffer_size_mb": 16,
+    "buffer_size_kB": 16,
     "concurrency": 2
   },
   "db": {
@@ -37,7 +37,7 @@ class ToDbConfigParsingTest(unittest.TestCase):
         self.assertEqual(default_config.cell_delimiter(), ToDbConfig.DEFAULT_CELL_DELIMITER)
         self.assertEqual(default_config.row_delimiter(), ToDbConfig.DEFAULT_ROW_DELIMITER)
         self.assertEqual(default_config.has_header(), ToDbConfig.DEFAULT_HAS_HEADER)
-        self.assertEqual(default_config.parsing_buffer_size_mb(), ToDbConfig.DEFAULT_PARSING_BUFFER_SIZE_MB)
+        self.assertEqual(default_config.parsing_buffer_size_kB(), ToDbConfig.DEFAULT_PARSING_BUFFER_SIZE_kB)
         self.assertEqual(default_config.parsing_concurrency(), ToDbConfig.DEFAULT_PARSING_CONCURRENCY)
 
     def test_should_return_custom_config_on_custom_input(self):
@@ -50,5 +50,5 @@ class ToDbConfigParsingTest(unittest.TestCase):
         self.assertEqual(custom_config.cell_delimiter(), "\t")
         self.assertEqual(custom_config.row_delimiter(), ";")
         self.assertEqual(custom_config.has_header(), False)
-        self.assertEqual(custom_config.parsing_buffer_size_mb(), 16)
+        self.assertEqual(custom_config.parsing_buffer_size_kB(), 16)
         self.assertEqual(custom_config.parsing_concurrency(), 2)

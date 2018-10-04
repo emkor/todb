@@ -6,7 +6,7 @@ class ToDbConfig(object):
     DEFAULT_HAS_HEADER = True
     DEFAULT_ROW_DELIMITER = "\n"
     DEFAULT_CELL_DELIMITER = ","
-    DEFAULT_PARSING_BUFFER_SIZE_MB = 32
+    DEFAULT_PARSING_BUFFER_SIZE_kB = 1000
     DEFAULT_PARSING_CONCURRENCY = 4
     DEFAULT_DB_HOST = "localhost"
     DEFAULT_DB_PORT = 3306
@@ -28,8 +28,8 @@ class ToDbConfig(object):
     def cell_delimiter(self) -> str:
         return str(self.conf_dict.get("file", {}).get("cell_delimiter", self.DEFAULT_CELL_DELIMITER))
 
-    def parsing_buffer_size_mb(self) -> float:
-        return float(self.conf_dict.get("parsing", {}).get("buffer_size_mb", self.DEFAULT_PARSING_BUFFER_SIZE_MB))
+    def parsing_buffer_size_kB(self) -> float:
+        return float(self.conf_dict.get("parsing", {}).get("buffer_size_kB", self.DEFAULT_PARSING_BUFFER_SIZE_kB))
 
     def parsing_concurrency(self) -> int:
         return int(self.conf_dict.get("parsing", {}).get("concurrency", self.DEFAULT_PARSING_CONCURRENCY))

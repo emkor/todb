@@ -1,4 +1,10 @@
 import argparse
+import json
+from datetime import datetime
+from os import path
+
+from todb.config import ToDbConfig
+from todb.util import seconds_between
 
 
 def parse_args() -> argparse.Namespace:
@@ -14,7 +20,12 @@ def cli_main() -> None:
 
 
 def main(args: argparse.Namespace) -> None:
+    start_time = datetime.utcnow()
     print("Running with: {}!".format(args))
+    json_config = json.loads(args.config) if args.config is not None and path.exists(args.config) else {}
+    config = ToDbConfig(json_config)
+    print("Parsed config to: {}".format(config))
+    print("Done in {:10.3f}s!".format(seconds_between(start_time)))
 
 
 if __name__ == "__main__":
