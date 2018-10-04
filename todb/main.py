@@ -37,7 +37,8 @@ def main(args: argparse.Namespace) -> None:
         columns = parse_model_file(args.model)
         print("Parsed model columns: {}".format(columns))
 
-        table_name = path.basename(args.input)
+        current_time = start_time.replace(microsecond=0).time().isoformat()
+        table_name = "todb_{}_{}".format(path.basename(args.input), current_time)
         _register_db_tables(table_name, columns, config)
 
     print("Done in {:2.3f}s!".format(seconds_between(start_time)))
