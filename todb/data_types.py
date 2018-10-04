@@ -1,10 +1,11 @@
 import json
-from copy import copy
 from datetime import date, time, datetime
 from typing import Type, List
 
 from sqlalchemy import BigInteger, Integer, Float, Date, Time, DateTime, Boolean, Unicode
 from sqlalchemy.sql.type_api import TypeEngine
+
+from todb.abstract import Model
 
 _CONF_TYPE_TO_PYTHON_TYPE = {
     "bool": bool,
@@ -37,7 +38,7 @@ def get_sql_type(conf_type: str) -> Type[TypeEngine]:
     return _CONF_TYPE_TO_SQL_TYPE[conf_type]
 
 
-class ConfColumn(object):
+class ConfColumn(Model):
     def __init__(self, name: str, col_index: int, conf_type: str,
                  nullable: bool, index: bool, unique: bool) -> None:
         self.name = name
@@ -51,18 +52,6 @@ class ConfColumn(object):
 
     def is_key(self) -> bool:
         return bool(self.index and self.unique)
-
-    def __repr__(self):
-        return copy(self.__dict__)
-
-    def __str__(self):
-        return self.__repr__()
-
-    def __eq__(self, other):
-        return self.__dict__ == other.__dict__
-
-    def __hash__(self):
-        return hash(self.__dict__)
 
 
 def parse_model_file(file_path: str) -> List[ConfColumn]:
