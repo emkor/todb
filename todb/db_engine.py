@@ -29,6 +29,6 @@ def get_db_engine(todb_config: ToDbConfig) -> Engine:
 def sql_table_from_columns(sql_metadata: MetaData, table_name: str, columns: List[ConfColumn]) -> Table:
     id_column = Column("id", BigInteger, primary_key=True, autoincrement=True)
     sql_columns = [Column(c.name, c.sql_type, nullable=c.nullable,
-                          primary_key=c.is_key(), index=c.index, unique=c.unique)
+                          primary_key=c.is_key(), index=c.indexed, unique=c.unique)
                    for c in columns]
     return Table(table_name, sql_metadata, id_column, *sql_columns)

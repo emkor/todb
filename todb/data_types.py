@@ -40,18 +40,18 @@ def get_sql_type(conf_type: str) -> Type[TypeEngine]:
 
 class ConfColumn(Model):
     def __init__(self, name: str, col_index: int, conf_type: str,
-                 nullable: bool, index: bool, unique: bool) -> None:
+                 nullable: bool, indexed: bool, unique: bool) -> None:
         self.name = name
         self.col_index = col_index
         self.nullable = nullable
-        self.index = index
+        self.indexed = indexed
         self.unique = unique
         self.conf_type = conf_type
         self.python_type = get_python_type(self.conf_type)
         self.sql_type = get_sql_type(self.conf_type)
 
     def is_key(self) -> bool:
-        return bool(self.index and self.unique)
+        return bool(self.indexed and self.unique)
 
 
 def parse_model_file(file_path: str) -> List[ConfColumn]:
@@ -60,7 +60,7 @@ def parse_model_file(file_path: str) -> List[ConfColumn]:
         model_conf = json.load(model_file)
     for col_name, col_conf in model_conf.get("model").items():
         column = ConfColumn(name=col_name, col_index=col_conf["column_index"], conf_type=col_conf["type"],
-                            nullable=col_conf.get("nullable", True), index=col_conf.get("index", False),
+                            nullable=col_conf.get("nullable", True), indexed=col_conf.get("index", False),
                             unique=col_conf.get("unique", False))
         columns.append(column)
     return columns

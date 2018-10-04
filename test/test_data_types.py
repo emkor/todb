@@ -10,4 +10,4 @@ class DataModelParsingTest(unittest.TestCase):
         model_columns = parse_model_file(abs_csv_path)
         self.assertEqual(len(model_columns), 3)
         self.assertIn(ConfColumn(name="artist", col_index=0, conf_type="string",
-                                 nullable=False, index=True, unique=False), model_columns)
+                                 nullable=False, indexed=True, unique=False), model_columns)
