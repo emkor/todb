@@ -20,7 +20,8 @@ CUSTOM_JSON = """
     "host": "pgsql.local",
     "port": 5432,
     "user": "root",
-    "password": "secret"
+    "password": "secret",
+    "database": "myDb"
   }
 }
 """
@@ -33,6 +34,7 @@ class ToDbConfigParsingTest(unittest.TestCase):
         self.assertEqual(default_config.db_port(), ToDbConfig.DEFAULT_DB_PORT)
         self.assertEqual(default_config.db_user(), ToDbConfig.DEFAULT_DB_USER)
         self.assertEqual(default_config.db_password(), ToDbConfig.DEFAULT_DB_PASSWORD)
+        self.assertEqual(default_config.db_database(), ToDbConfig.DEFAULT_DB_DATABASE)
         self.assertEqual(default_config.file_encoding(), ToDbConfig.DEFAULT_FILE_ENCODING)
         self.assertEqual(default_config.cell_delimiter(), ToDbConfig.DEFAULT_CELL_DELIMITER)
         self.assertEqual(default_config.row_delimiter(), ToDbConfig.DEFAULT_ROW_DELIMITER)
@@ -46,6 +48,7 @@ class ToDbConfigParsingTest(unittest.TestCase):
         self.assertEqual(custom_config.db_port(), 5432)
         self.assertEqual(custom_config.db_user(), "root")
         self.assertEqual(custom_config.db_password(), "secret")
+        self.assertEqual(custom_config.db_database(), "myDb")
         self.assertEqual(custom_config.file_encoding(), "ascii")
         self.assertEqual(custom_config.cell_delimiter(), "\t")
         self.assertEqual(custom_config.row_delimiter(), ";")

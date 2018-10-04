@@ -3,9 +3,7 @@ from typing import Iterator, List
 from todb.config import ToDbConfig
 
 
-class DsvParser(object):
-    """Delimiter-separated-value parser"""
-
+class CsvParser(object):
     def __init__(self, todb_config: ToDbConfig) -> None:
         self.todb_config = todb_config
 

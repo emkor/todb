@@ -12,6 +12,7 @@ class ToDbConfig(object):
     DEFAULT_DB_PORT = 3306
     DEFAULT_DB_USER = "user"
     DEFAULT_DB_PASSWORD = "password"
+    DEFAULT_DB_DATABASE = "default"
 
     def __init__(self, conf_dict: Dict[Text, Any]) -> None:
         self.conf_dict = conf_dict
@@ -45,3 +46,6 @@ class ToDbConfig(object):
 
     def db_password(self) -> str:
         return str(self.conf_dict.get("db", {}).get("password", self.DEFAULT_DB_PASSWORD))
+
+    def db_database(self) -> str:
+        return str(self.conf_dict.get("db", {}).get("database", self.DEFAULT_DB_DATABASE))
