@@ -7,7 +7,7 @@ from todb.util import proj_path_to_abs
 
 class CsvParsingTest(unittest.TestCase):
     def test_should_parse_example_csv_file(self):
-        abs_csv_path = proj_path_to_abs("resources/example.csv")
+        abs_csv_path = proj_path_to_abs("resources/example_input.csv")
         config = ToDbConfig({"file": {"has_header": True, }, "parsing": {"buffer_size_kB": 1}})
         parser = CsvParser(config)
 
