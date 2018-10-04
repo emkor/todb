@@ -1,3 +1,4 @@
+import json
 from typing import Any, Text, Dict
 
 from todb.abstract import Model
@@ -16,6 +17,12 @@ DEFAULT_DB_DATABASE = "default"
 
 
 class ToDbConfig(Model):
+    @classmethod
+    def from_file(cls, file_path: str) -> Model:
+        with open(file_path, "r") as json_file:
+            config_dict = json.load(json_file)
+        return ToDbConfig(config_dict)
+
     def __init__(self, conf_dict: Dict[Text, Any]) -> None:
         self.conf_dict = conf_dict
 
