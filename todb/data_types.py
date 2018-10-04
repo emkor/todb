@@ -58,7 +58,7 @@ def parse_model_file(file_path: str) -> List[ConfColumn]:
     columns = []
     with open(file_path, "r", encoding="utf-8") as model_file:
         model_conf = json.load(model_file)
-    for col_name, col_conf in model_conf.get("model").items():
+    for col_name, col_conf in model_conf.items():
         column = ConfColumn(name=col_name, col_index=col_conf["column_index"], conf_type=col_conf["type"],
                             nullable=col_conf.get("nullable", True), indexed=col_conf.get("index", False),
                             unique=col_conf.get("unique", False))

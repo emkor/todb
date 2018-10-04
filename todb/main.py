@@ -5,6 +5,10 @@ from os import path
 from todb.to_db import to_db
 from todb.util import seconds_between
 
+EXIT_CODE_OK = 0
+EXIT_CODE_USER_ERROR = 1
+EXIT_CODE_FAILURE = 2
+
 
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description='Import CSV/TSV files into any SQL DB system')
@@ -31,14 +35,14 @@ def main(args: argparse.Namespace) -> None:
             took_seconds = seconds_between(start_time)
             velocity_kBps = (input_file_size / 1000) / took_seconds
             print("Done in {:2.3f}s ({:3.1f} kB/s)!".format(took_seconds, velocity_kBps))
+            exit(EXIT_CODE_OK)
         except Exception as e:
             print("Error: {}".format(e))
-            exit(2)
+            exit(EXIT_CODE_FAILURE)
     else:
         print("Did not provide config, model or input or those files does not exist.")
-        exit(1)
+        exit(EXIT_CODE_USER_ERROR)
 
 
 if __name__ == "__main__":
     cli_main()
-    exit(0)
