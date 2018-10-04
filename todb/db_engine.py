@@ -22,7 +22,7 @@ def get_db_engine(todb_config: ToDbConfig) -> Engine:
                                                             todb_config.db_port(),
                                                             todb_config.db_database())
         print("Connecting to DB with connection {}".format(db_connection_string))
-        _ENGINE = create_engine(db_connection_string, echo=True, poolclass=NullPool)
+        _ENGINE = create_engine(db_connection_string, echo=False, poolclass=NullPool)
     return _ENGINE
 
 

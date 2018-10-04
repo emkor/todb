@@ -1,0 +1,48 @@
+from typing import Dict, List, Any, Optional
+
+from datetime import datetime, date, time
+
+from dateutil.parser import parse
+from todb.data_types import ConfColumn
+
+
+class NullInRequiredColumn(ValueError):
+    pass
+
+
+class EntityBuilder(object):
+    def __init__(self, columns: List[ConfColumn]) -> None:
+        self.columns = columns
+
+    def to_entity(self, cells_in_row: List[str]) -> Optional[Dict[str, Any]]:
+        try:
+            return {c.name: self._cast_to_sql(c, cells_in_row[c.col_index]) for c in self.columns}
+        except NullInRequiredColumn as e:
+            print("Can not build entity from row {}: {}".format(cells_in_row, e))
+            return None
+
+    def _cast_to_sql(self, column: ConfColumn, value: Optional[str]) -> Optional[Any]:
+        if not value:
+            if column.nullable:
+                return None
+            else:
+                raise NullInRequiredColumn("Value for column {} is empty!".format(column.name))
+        try:
+            if column.python_type in (datetime, date, time):
+                parsed_time = parse(value)
+                if column.python_type == datetime:
+                    return parsed_time
+                elif column.python_type == date:
+                    return parsed_time.date()
+                else:
+                    return parsed_time.time()
+            elif column.python_type == bool:
+                return bool(value)  # TODO check for true / false strings
+            else:
+                return column.python_type(value)
+        except Exception as e:
+            print("WARNING: Could not cast {} for column {}: {}".format(value, column, e))
+            if column.nullable:
+                return None
+            else:
+                raise e

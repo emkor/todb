@@ -16,13 +16,18 @@ class CsvParser(object):
                 data = input_file.read(buffer_size_bytes)
                 if not data:
                     break
-                one_line = cached_last_line + data.decode(self.todb_config.file_encoding())
-                rows = one_line.split(self.todb_config.row_delimiter())
-                cached_last_line = rows.pop(-1)  # last line may not be complete up to row delimiter!
-                if has_header:
-                    rows.pop(0)  # remove first row as header and don't remove it again
-                    has_header = False
-                cells_in_rows = [r.split(self.todb_config.cell_delimiter()) for r in rows]
-                yield cells_in_rows
+                try:
+                    one_line = cached_last_line + data.decode(self.todb_config.file_encoding())
+                    rows = one_line.split(self.todb_config.row_delimiter())
+                    cached_last_line = rows.pop(-1)  # last line may not be complete up to row delimiter!
+                    if has_header:
+                        rows.pop(0)  # remove first row as header and don't remove it again
+                        has_header = False
+                    cells_in_rows = [r.split(self.todb_config.cell_delimiter()) for r in rows]
+                    yield cells_in_rows
+                except Exception as e:
+                    print("Error on parsing CSV: {}".format(e))
+                    cached_last_line = ""
+                    yield []
             # don't forget last cached line
             yield [cached_last_line.split(self.todb_config.cell_delimiter())] if cached_last_line else []
