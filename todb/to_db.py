@@ -1,8 +1,6 @@
-from datetime import datetime, date, time
+from datetime import datetime
 from os import path
-from typing import List, Any, Optional, Dict
-
-from dateutil.parser import parse
+from typing import List
 from sqlalchemy import MetaData, Table
 from sqlalchemy.engine import Engine
 
@@ -24,9 +22,11 @@ def to_db(config_file_name: str, model_file_name: str, input_file_name: str) -> 
     table_name = "todb_{}_{}".format(path.basename(input_file_name), current_time)
     db_engine = get_db_engine(config)
 
-    table = _register_db_table(db_engine, table_name, columns)
     parser = CsvParser(config)
     entity_builder = EntityBuilder(columns)
+
+    table = _register_db_table(db_engine, table_name, columns)
+
     row_counter = 0
     for cells_in_rows in parser.read_rows_in_chunks(input_file_name):
         row_counter += len(cells_in_rows)

@@ -15,13 +15,19 @@ class EntityBuilder(object):
         self.columns = columns
 
     def to_entity(self, cells_in_row: List[str]) -> Optional[Dict[str, Any]]:
-        try:
-            return {c.name: self._cast_to_sql(c, cells_in_row[c.col_index]) for c in self.columns}
-        except NullInRequiredColumn as e:
-            print("Can not build entity from row {}: {}".format(cells_in_row, e))
+        if len(self.columns) < len(cells_in_row):
+            try:
+                return {c.name: self._cast_value_to_sql_compatible(c, cells_in_row[c.col_index]) for c in self.columns}
+            except NullInRequiredColumn as e:
+                print("Can not build entity from row {}: {}".format(cells_in_row, e))
+                return None
+        else:
+            print("Row {} has less cells ({}) then defined columns ({})".format(cells_in_row,
+                                                                                len(cells_in_row),
+                                                                                len(self.columns)))
             return None
 
-    def _cast_to_sql(self, column: ConfColumn, value: Optional[str]) -> Optional[Any]:
+    def _cast_value_to_sql_compatible(self, column: ConfColumn, value: Optional[str]) -> Optional[Any]:
         if not value:
             if column.nullable:
                 return None
