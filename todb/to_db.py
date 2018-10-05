@@ -1,12 +1,12 @@
 import multiprocessing as mp
 from datetime import datetime
 from os import path
-from typing import List, Any, Dict
 
 from todb.config import config_from_file
 from todb.data_types import parse_model_file
 from todb.entity_builder import EntityBuilder
 from todb.parsing import CsvParser
+from todb.parsing_worker import ParsingWorker
 from todb.sql_client import SqlClient
 
 
@@ -28,7 +28,7 @@ def to_db(config_file_name: str, model_file_name: str, input_file_name: str) -> 
     row_counter = 0
     tasks = mp.JoinableQueue(maxsize=2 * config.parsing_concurrency())  # type: ignore
     workers = [
-        Worker(tasks, EntityBuilder(columns), SqlClient(config), table_name)
+        ParsingWorker(tasks, EntityBuilder(columns), SqlClient(config), table_name)
         for _ in range(config.parsing_concurrency())
     ]
     for worker in workers:
@@ -40,34 +40,3 @@ def to_db(config_file_name: str, model_file_name: str, input_file_name: str) -> 
         tasks.put(cells_in_rows)
     [tasks.put(None) for w in workers]
     tasks.join()
-
-
-class Worker(mp.Process):
-    def __init__(self, task_queue: mp.Queue, entity_builder: EntityBuilder,
-                 sql_client: SqlClient, table_name: str) -> None:
-        super(Worker, self).__init__()
-        self.table_name = table_name
-        self.task_queue = task_queue
-        self.entity_builder = entity_builder
-        self.sql_client = sql_client
-
-    def run(self):
-        print("{} | Starting!".format(self.name))
-        while True:
-            rows = self.task_queue.get()
-            if rows is None:
-                print("{} | Exiting!".format(self.name))  # Poison pill means shutdown
-                self.task_queue.task_done()
-                break
-            list_of_model_dicts = self._parse_into_sql_dicts(rows)
-            self.sql_client.insert_into(table=self.sql_client.get_table(self.table_name),
-                                        objects=list_of_model_dicts)
-            self.task_queue.task_done()
-
-    def _parse_into_sql_dicts(self, rows: List[List[str]]) -> List[Dict[str, Any]]:
-        list_of_model_dicts = []
-        for row_cells in rows:
-            entity = self.entity_builder.to_entity(row_cells)
-            if entity is not None:
-                list_of_model_dicts.append(entity)
-        return list_of_model_dicts
