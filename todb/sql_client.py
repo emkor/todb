@@ -11,16 +11,16 @@ from todb.data_types import ConfColumn
 class SqlClient(object):
     def __init__(self, todb_config: ToDbConfig) -> None:
         self.todb_config = todb_config
-        self._db_engine = self._get_db_engine()
+        self._db_engine = None
 
     def init_table(self, name: str, columns: List[ConfColumn]) -> Table:
-        sql_meta = MetaData()
-        table = self._sql_table_from_columns(sql_meta, name, columns)
-        sql_meta.create_all(self._db_engine)
+        meta = MetaData()
+        table = self._sql_table_from_columns(meta, name, columns)
+        meta.create_all(self._get_db_engine())
         return table
 
     def insert_into(self, table: Table, objects: List[Dict[str, Any]]):
-        db_connection = self._db_engine.connect()
+        db_connection = self._get_db_engine().connect()
         try:
             db_connection.execute(table.insert(), objects)
             db_connection.close()
@@ -28,15 +28,22 @@ class SqlClient(object):
             db_connection.close()
             print("Could not insert: {} (objects: {})".format(e, objects))
 
+    def get_table(self, name: str) -> Table:
+        meta = MetaData()
+        meta.reflect(bind=self._get_db_engine())
+        return meta.tables[name]
+
     def _get_db_engine(self) -> Engine:
-        db_connection_string = "{}://{}:{}@{}:{}/{}".format(self.todb_config.db_type(),
-                                                            self.todb_config.db_user(),
-                                                            self.todb_config.db_password(),
-                                                            self.todb_config.db_host(),
-                                                            self.todb_config.db_port(),
-                                                            self.todb_config.db_database())
-        print("Connecting to DB with connection {}".format(db_connection_string))
-        return create_engine(db_connection_string, echo=False, poolclass=NullPool)
+        if self._db_engine is None:
+            db_connection_string = "{}://{}:{}@{}:{}/{}".format(self.todb_config.db_type(),
+                                                                self.todb_config.db_user(),
+                                                                self.todb_config.db_password(),
+                                                                self.todb_config.db_host(),
+                                                                self.todb_config.db_port(),
+                                                                self.todb_config.db_database())
+            print("Connecting to DB with connection {}".format(db_connection_string))
+            self._db_engine = create_engine(db_connection_string, echo=False, poolclass=NullPool)
+        return self._db_engine
 
     def _sql_table_from_columns(self, sql_metadata: MetaData, table_name: str, columns: List[ConfColumn]) -> Table:
         id_column = Column("id", BigInteger, primary_key=True, autoincrement=True)

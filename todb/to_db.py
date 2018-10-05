@@ -1,3 +1,4 @@
+import multiprocessing as mp
 from datetime import datetime
 from os import path
 
@@ -19,7 +20,7 @@ def to_db(config_file_name: str, model_file_name: str, input_file_name: str) -> 
     table_name = "todb_{}_{}".format(path.basename(input_file_name), current_time)
     print("Initializing SQL table: {}".format(table_name))
     sql_client = SqlClient(config)
-    table = sql_client.init_table(table_name, columns)
+    sql_client.init_table(table_name, columns)
 
     print("Inserting data into SQL...")
     parser = CsvParser(config)
@@ -31,6 +32,7 @@ def to_db(config_file_name: str, model_file_name: str, input_file_name: str) -> 
             entity = entity_builder.to_entity(row_cells)
             if entity is not None:
                 list_of_model_dicts.append(entity)
+        table = sql_client.get_table(table_name)
         sql_client.insert_into(table, objects=list_of_model_dicts)
         row_counter += len(cells_in_rows)
         print("Inserted {} rows...".format(row_counter))
