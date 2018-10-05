@@ -1,0 +1,20 @@
+{
+  "file": {
+    "encoding": "utf-8",
+    "has_header": true,
+    "row_delimiter": "\n",
+    "cell_delimiter": ","
+  },
+  "parsing": {
+    "buffer_size_kB": 64,
+    "concurrency": 4
+  },
+  "db": {
+    "type": "postgresql+psycopg2",
+    "host": "localhost",
+    "port": 5432,
+    "user": "user",
+    "password": "secret",
+    "database": "default"
+  }
+}
