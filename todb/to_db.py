@@ -26,12 +26,13 @@ def to_db(config_file_name: str, model_file_name: str, input_file_name: str) -> 
     print("Inserting data into SQL...")
     parser = CsvParser(config)
     row_counter = 0
-    tasks = mp.JoinableQueue(maxsize=2 * config.parsing_concurrency())
+    tasks = mp.JoinableQueue(maxsize=2 * config.parsing_concurrency())  # type: ignore
     workers = [
         Worker(tasks, EntityBuilder(columns), SqlClient(config), table_name)
         for _ in range(config.parsing_concurrency())
     ]
-    [w.start() for w in workers]
+    for worker in workers:
+        worker.start()
 
     for cells_in_rows in parser.read_rows_in_chunks(input_file_name):
         row_counter += len(cells_in_rows)
