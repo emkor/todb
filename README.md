@@ -8,7 +8,8 @@ importing csv data into any SQL DB in a smart way
     - Postgres
     - Sqlite
 - performance (time taken / input file size):
-    - on quad-core CPU laptop, SSD, local database and 3-columns of data: 800-950 kB/s
+    - on quad-core CPU laptop, SSD, local database and 3-columns of data in 8 MB file: 800-950 kB/s
+    - on quad-core CPU laptop, SSD, local database and 8-columns of data in >400 MB file: ~1600 kB/s
 
 ## Usage
 - configure `file` section of `resources/config.json` to match structure of your input file
