@@ -5,7 +5,7 @@ from todb.config import ToDbConfig
 from todb.data_types import ConfColumn
 from todb.entity_builder import EntityBuilder
 from todb.parsing import CsvParser
-from todb.parsing_worker import Importer
+from todb.importer import Importer
 from todb.sql_client import SqlClient
 
 
@@ -19,9 +19,7 @@ class ParallelExecutor(object):
         print("Initializing SQL table: {}".format(self.table_name))
         sql_client = SqlClient(self.config)
         sql_client.init_table(self.table_name, self.columns)
-        print("Inserting data into SQL...")
-        parser = CsvParser(self.config)
-        row_counter = 0
+
         tasks = mp.JoinableQueue(maxsize=2 * self.config.parsing_concurrency())  # type: ignore
         workers = [
             ParsingWorker(tasks, EntityBuilder(self.columns), SqlClient(self.config), self.table_name)
@@ -30,6 +28,9 @@ class ParallelExecutor(object):
         for worker in workers:
             worker.start()
 
+        print("Inserting data into SQL...")
+        parser = CsvParser(self.config)
+        row_counter = 0
         for cells_in_rows in parser.read_rows_in_chunks(input_file_name):
             row_counter += len(cells_in_rows)
             print("Parsed {} rows...".format(row_counter))
