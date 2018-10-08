@@ -10,7 +10,7 @@ from todb.sql_client import SqlClient
 
 
 class ParallelExecutor(object):
-    def __init__(self, config: ToDbConfig, columns: List[ConfColumn], table_name: str):
+    def __init__(self, config: ToDbConfig, columns: List[ConfColumn], table_name: str) -> None:
         self.config = config
         self.columns = columns
         self.table_name = table_name
