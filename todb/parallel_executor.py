@@ -1,27 +1,12 @@
 import multiprocessing as mp
-from datetime import datetime
-from os import path
 from typing import List
 
-from todb.config import config_from_file, ToDbConfig
-from todb.data_types import parse_model_file, ConfColumn
+from todb.config import ToDbConfig
+from todb.data_types import ConfColumn
 from todb.entity_builder import EntityBuilder
 from todb.parsing import CsvParser
-from todb.parsing_worker import ParsingWorker
+from todb.parsing_worker import Importer
 from todb.sql_client import SqlClient
-
-
-def to_db(config_file_name: str, model_file_name: str, input_file_name: str) -> None:
-    config = config_from_file(config_file_name)
-    print("Parsed config to: {}".format(config))
-
-    columns = parse_model_file(model_file_name)
-    print("Parsed model columns: {}".format(columns))
-
-    current_time = datetime.utcnow().replace(microsecond=0).time().isoformat()
-    table_name = "todb_{}_{}".format(path.basename(input_file_name), current_time)
-    executor = ParallelExecutor(config, columns, table_name)
-    executor.start(input_file_name)
 
 
 class ParallelExecutor(object):
@@ -51,3 +36,22 @@ class ParallelExecutor(object):
             tasks.put(cells_in_rows)
         [tasks.put(None) for w in workers]
         tasks.join()
+
+
+class ParsingWorker(mp.Process):
+    def __init__(self, task_queue: mp.Queue, entity_builder: EntityBuilder,
+                 sql_client: SqlClient, table_name: str) -> None:
+        super(ParsingWorker, self).__init__()
+        self.importer = Importer(entity_builder, sql_client, table_name)
+        self.task_queue = task_queue
+
+    def run(self):
+        print("{} | Starting!".format(self.name))
+        while True:
+            rows = self.task_queue.get()
+            if rows is None:
+                print("{} | Exiting!".format(self.name))  # Poison pill means shutdown
+                self.task_queue.task_done()
+                break
+            self.importer.parse_and_import(rows)
+            self.task_queue.task_done()
