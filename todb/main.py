@@ -32,7 +32,8 @@ def _to_db(config_file_name: str, model_file_name: str, input_file_name: str) ->
     current_time = datetime.utcnow().replace(microsecond=0).time().isoformat()
     table_name = "todb_{}_{}".format(path.basename(input_file_name), current_time)
     executor = ParallelExecutor(config, columns, table_name)
-    executor.start(input_file_name)
+    csv_rows, db_rows = executor.start(input_file_name)
+    print("Inserted {} rows out of {} available ({}%)".format(db_rows, csv_rows, round(db_rows * 100 / csv_rows)))
 
 
 def cli_main() -> None:

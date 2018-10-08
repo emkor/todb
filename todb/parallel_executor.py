@@ -1,5 +1,5 @@
 import multiprocessing as mp
-from typing import List
+from typing import List, Tuple
 
 from todb.config import ToDbConfig
 from todb.data_types import ConfColumn
@@ -15,10 +15,10 @@ class ParallelExecutor(object):
         self.columns = columns
         self.table_name = table_name
 
-    def start(self, input_file_name: str):
+    def start(self, input_file_name: str) -> Tuple[int, int]:
         print("Initializing SQL table: {}".format(self.table_name))
         sql_client = SqlClient(self.config)
-        sql_client.init_table(self.table_name, self.columns)
+        table = sql_client.init_table(self.table_name, self.columns)
 
         tasks = mp.JoinableQueue(maxsize=2 * self.config.parsing_concurrency())  # type: ignore
         workers = [
@@ -37,6 +37,9 @@ class ParallelExecutor(object):
             tasks.put(cells_in_rows)
         [tasks.put(None) for w in workers]
         tasks.join()
+
+        db_row_count = sql_client.count(table)
+        return row_counter, db_row_count
 
 
 class ParsingWorker(mp.Process):
