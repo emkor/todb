@@ -5,6 +5,18 @@ from datetime import datetime, date, time
 from dateutil.parser import parse
 from todb.data_types import ConfColumn
 
+BOOLEAN_MAPPINGS = {
+    "true": True,
+    "false": False,
+    "0": False,
+    "yes": True,
+    "no": False,
+    "y": True,
+    "n": False,
+    "present": True,
+    "absent": False
+}
+
 
 class NullInRequiredColumn(ValueError):
     pass
@@ -43,7 +55,11 @@ class EntityBuilder(object):
                 else:
                     return parsed_time.time()
             elif column.python_type == bool:
-                return bool(value)  # TODO check for true / false strings
+                mapping = BOOLEAN_MAPPINGS.get(value.lower(), None)
+                if mapping is not None:
+                    return mapping
+                else:
+                    return bool(int(value))
             else:
                 return column.python_type(value)
         except Exception as e:
