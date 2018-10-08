@@ -27,7 +27,7 @@ class EntityBuilder(object):
         self.columns = columns
 
     def to_entity(self, cells_in_row: List[str]) -> Optional[Dict[str, Any]]:
-        if len(self.columns) < len(cells_in_row):
+        if len(self.columns) <= len(cells_in_row):
             try:
                 return {c.name: self._cast_value_to_sql_compatible(c, cells_in_row[c.col_index]) for c in self.columns}
             except NullInRequiredColumn as e:
@@ -49,7 +49,7 @@ class EntityBuilder(object):
             if column.python_type in (datetime, date, time):
                 parsed_time = parse(value)
                 if column.python_type == datetime:
-                    return parsed_time
+                    return parsed_time.replace(tzinfo=None)
                 elif column.python_type == date:
                     return parsed_time.date()
                 else:
