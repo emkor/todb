@@ -15,8 +15,11 @@ class SqlClient(object):
 
     def init_table(self, name: str, columns: List[ConfColumn]) -> Table:
         meta = MetaData()
-        table = self._sql_table_from_columns(meta, name, columns)
-        meta.create_all(self._get_db_engine())
+        table = self.get_table(name)
+        if table is None:
+            print("Creating table named {}...".format(name))
+            table = self._sql_table_from_columns(meta, name, columns)
+            meta.create_all(self._get_db_engine())
         return table
 
     def insert_into(self, table: Table, objects: List[Dict[str, Any]]):
@@ -30,12 +33,17 @@ class SqlClient(object):
 
     def drop_table(self, name: str) -> None:
         the_table = self.get_table(name)
-        the_table.drop(bind=self._get_db_engine())
+        if the_table is not None:
+            the_table.drop(bind=self._get_db_engine())
 
-    def get_table(self, name: str) -> Table:
+    def get_table(self, name: str) -> Optional[Table]:
         meta = MetaData()
         meta.reflect(bind=self._get_db_engine())
-        return meta.tables[name]
+        try:
+            return meta.tables[name]
+        except KeyError as e:
+            print("Could not find DB table named {}: {}".format(name, e))
+            return None
 
     def count(self, table: Table) -> int:
         db_connection = self._get_db_engine().connect()

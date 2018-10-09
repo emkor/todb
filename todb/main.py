@@ -1,4 +1,5 @@
 import argparse
+from typing import Optional
 
 from todb.util import seconds_between
 
@@ -19,10 +20,11 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument('config', type=str, help='File containing parsing config')
     parser.add_argument('model', type=str, help='File containing model of CSV data')
     parser.add_argument('input', type=str, help='A CSV/TSV file to import into DB')
+    parser.add_argument('--table', type=str, help='Table name to insert data to')
     return parser.parse_args()
 
 
-def _to_db(config_file_name: str, model_file_name: str, input_file_name: str) -> None:
+def _to_db(config_file_name: str, model_file_name: str, input_file_name: str, table_name: Optional[str] = None) -> None:
     config = config_from_file(config_file_name)
     print("Parsed config to: {}".format(config))
 
@@ -30,7 +32,7 @@ def _to_db(config_file_name: str, model_file_name: str, input_file_name: str) ->
     print("Parsed model columns: {}".format(columns))
 
     current_time = datetime.utcnow().replace(microsecond=0).time().isoformat()
-    table_name = "todb_{}_{}".format(path.basename(input_file_name)[:32], current_time)
+    table_name = table_name or "todb_{}_{}".format(path.basename(input_file_name)[:32], current_time)
     executor = ParallelExecutor(config, columns, table_name)
     csv_rows, db_rows = executor.start(input_file_name)
     print("Inserted {} rows out of {} available ({}%)".format(db_rows, csv_rows, round(db_rows * 100 / csv_rows)))
@@ -49,7 +51,8 @@ def main(args: argparse.Namespace) -> None:
             start_time = datetime.utcnow()
             print("Running with: {}!".format(args))
             input_file_size = path.getsize(args.input)
-            _to_db(config_file_name=args.config, model_file_name=args.model, input_file_name=args.input)
+            _to_db(config_file_name=args.config, model_file_name=args.model,
+                   input_file_name=args.input, table_name=args.table)
             took_seconds = seconds_between(start_time)
             velocity_kBps = (input_file_size / 1000) / took_seconds
             print("Done in {:2.3f}s ({:3.1f} kB/s)!".format(took_seconds, velocity_kBps))

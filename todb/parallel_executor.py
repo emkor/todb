@@ -16,7 +16,6 @@ class ParallelExecutor(object):
         self.table_name = table_name
 
     def start(self, input_file_name: str) -> Tuple[int, int]:
-        print("Initializing SQL table: {}".format(self.table_name))
         sql_client = SqlClient(self.config)
         table = sql_client.init_table(self.table_name, self.columns)
 
