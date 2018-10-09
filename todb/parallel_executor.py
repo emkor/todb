@@ -1,7 +1,7 @@
 import multiprocessing as mp
 from typing import List, Tuple
 
-from todb.config import ToDbConfig
+from todb.config import ToDbConfig, InputFileConfig
 from todb.data_types import ConfColumn
 from todb.entity_builder import EntityBuilder
 from todb.parsing import CsvParser
@@ -10,25 +10,26 @@ from todb.sql_client import SqlClient
 
 
 class ParallelExecutor(object):
-    def __init__(self, config: ToDbConfig, columns: List[ConfColumn], table_name: str) -> None:
-        self.config = config
+    def __init__(self, todb_config: ToDbConfig, input_file_config: InputFileConfig, columns: List[ConfColumn], table_name: str) -> None:
+        self.todb_config = todb_config
+        self.input_file_config = input_file_config
         self.columns = columns
         self.table_name = table_name
 
     def start(self, input_file_name: str) -> Tuple[int, int]:
-        sql_client = SqlClient(self.config)
+        sql_client = SqlClient(self.todb_config)
         table = sql_client.init_table(self.table_name, self.columns)
 
-        tasks = mp.JoinableQueue(maxsize=2 * self.config.parsing_concurrency())  # type: ignore
+        tasks = mp.JoinableQueue(maxsize=2 * self.todb_config.processes())  # type: ignore
         workers = [
-            ParsingWorker(tasks, EntityBuilder(self.columns), SqlClient(self.config), self.table_name)
-            for _ in range(self.config.parsing_concurrency())
+            ParsingWorker(tasks, EntityBuilder(self.columns), SqlClient(self.todb_config), self.table_name)
+            for _ in range(self.todb_config.processes())
         ]
         for worker in workers:
             worker.start()
 
         print("Inserting data into SQL...")
-        parser = CsvParser(self.config)
+        parser = CsvParser(self.todb_config)
         row_counter = 0
         for cells_in_rows in parser.read_rows_in_chunks(input_file_name):
             row_counter += len(cells_in_rows)

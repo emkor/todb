@@ -1,6 +1,6 @@
 import unittest
 
-from todb.config import ToDbConfig
+from todb.config import ToDbConfig, InputFileConfig
 from todb.parsing import CsvParser
 from todb.util import proj_path_to_abs
 
@@ -8,8 +8,9 @@ from todb.util import proj_path_to_abs
 class CsvParsingTest(unittest.TestCase):
     def test_should_parse_example_csv_file(self):
         abs_csv_path = proj_path_to_abs("resources/example_input.csv")
-        config = ToDbConfig({"file": {"has_header": True, }, "parsing": {"buffer_size_kB": 1}})
-        parser = CsvParser(config)
+        todb_config = ToDbConfig({"parsing": {"chunk_size_kB": 1}})
+        in_file_config = InputFileConfig({"has_header": True})
+        parser = CsvParser(in_file_config, todb_config)
 
         all_lines = []
         for lines in parser.read_rows_in_chunks(abs_csv_path):

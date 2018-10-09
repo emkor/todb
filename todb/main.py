@@ -25,15 +25,15 @@ def _parse_args() -> argparse.Namespace:
 
 
 def _to_db(config_file_name: str, model_file_name: str, input_file_name: str, table_name: Optional[str] = None) -> None:
-    config = config_from_file(config_file_name)
-    print("Parsed config to: {}".format(config))
+    todb_config = config_from_file(config_file_name)
+    print("Parsed config to: {}".format(todb_config))
 
-    columns = parse_model_file(model_file_name)
+    columns, file_config = parse_model_file(model_file_name)
     print("Parsed model columns: {}".format(columns))
 
     current_time = datetime.utcnow().replace(microsecond=0).time().isoformat()
     table_name = table_name or "todb_{}_{}".format(path.basename(input_file_name)[:32], current_time)
-    executor = ParallelExecutor(config, columns, table_name)
+    executor = ParallelExecutor(todb_config, file_config, columns, table_name)
     csv_rows, db_rows = executor.start(input_file_name)
     print("Inserted {} rows out of {} available ({}%)".format(db_rows, csv_rows, round(db_rows * 100 / csv_rows)))
 

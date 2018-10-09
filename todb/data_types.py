@@ -1,11 +1,12 @@
 import json
 from datetime import date, time, datetime
-from typing import Type, List
+from typing import Type, List, Tuple
 
 from sqlalchemy import BigInteger, Integer, Float, Date, Time, DateTime, Boolean, Unicode
 from sqlalchemy.sql.type_api import TypeEngine
 
 from todb.abstract import Model
+from todb.config import InputFileConfig
 
 _CONF_TYPE_TO_PYTHON_TYPE = {
     "bool": bool,
@@ -54,13 +55,14 @@ class ConfColumn(Model):
         return bool(self.indexed and self.unique)
 
 
-def parse_model_file(file_path: str) -> List[ConfColumn]:
+def parse_model_file(file_path: str) -> Tuple[List[ConfColumn], InputFileConfig]:
     columns = []
     with open(file_path, "r", encoding="utf-8") as model_file:
         model_conf = json.load(model_file)
-    for col_name, col_conf in model_conf.items():
-        column = ConfColumn(name=col_name, col_index=col_conf["column_index"], conf_type=col_conf["type"],
+    for col_name, col_conf in model_conf.get("columns", {}).items():
+        column = ConfColumn(name=col_name, col_index=col_conf["input_file_column"], conf_type=col_conf["type"],
                             nullable=col_conf.get("nullable", True), indexed=col_conf.get("index", False),
                             unique=col_conf.get("unique", False))
         columns.append(column)
-    return columns
+    file_config = InputFileConfig(model_conf.get("file", {}))
+    return columns, file_config

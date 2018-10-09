@@ -59,14 +59,8 @@ class SqlClient(object):
 
     def _get_db_engine(self) -> Engine:
         if self._db_engine is None:
-            db_connection_string = "{}://{}:{}@{}:{}/{}".format(self.todb_config.db_type(),
-                                                                self.todb_config.db_user(),
-                                                                self.todb_config.db_password(),
-                                                                self.todb_config.db_host(),
-                                                                self.todb_config.db_port(),
-                                                                self.todb_config.db_database())
-            print("Connecting to DB with connection {}".format(db_connection_string))
-            self._db_engine = create_engine(db_connection_string, echo=False, poolclass=NullPool)
+            print("Connecting to DB with connection {}".format(self.todb_config.db_url()))
+            self._db_engine = create_engine(self.todb_config.db_url(), echo=False, poolclass=NullPool)
         return self._db_engine
 
     def _sql_table_from_columns(self, sql_metadata: MetaData, table_name: str, columns: List[ConfColumn]) -> Table:
