@@ -29,7 +29,7 @@ class ParallelExecutor(object):
             worker.start()
 
         print("Inserting data into SQL...")
-        parser = CsvParser(self.todb_config)
+        parser = CsvParser(self.input_file_config, self.todb_config)
         row_counter = 0
         for cells_in_rows in parser.read_rows_in_chunks(input_file_name):
             row_counter += len(cells_in_rows)
