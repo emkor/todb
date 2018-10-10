@@ -3,7 +3,7 @@ from typing import Dict, List, Any, Optional
 from datetime import datetime, date, time
 
 from dateutil.parser import parse
-from todb.data_types import ConfColumn
+from todb.data_model import ConfColumn
 
 BOOLEAN_MAPPINGS = {
     "true": True,

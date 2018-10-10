@@ -6,8 +6,8 @@ from todb.util import seconds_between
 from datetime import datetime
 from os import path
 
-from todb.config import config_from_file
-from todb.data_types import parse_model_file
+from todb.todb_config import config_from_file
+from todb.data_model import parse_model_file
 from todb.parallel_executor import ParallelExecutor
 
 EXIT_CODE_OK = 0

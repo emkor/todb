@@ -1,6 +1,6 @@
 import unittest
 
-from todb.data_types import parse_model_file, ConfColumn
+from todb.data_model import parse_model_file, ConfColumn
 from todb.util import proj_path_to_abs
 
 

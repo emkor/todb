@@ -1,12 +1,34 @@
 import json
 from datetime import date, time, datetime
-from typing import Type, List, Tuple
+from typing import Type, List, Tuple, Dict, Any
 
 from sqlalchemy import BigInteger, Integer, Float, Date, Time, DateTime, Boolean, Unicode
 from sqlalchemy.sql.type_api import TypeEngine
 
 from todb.abstract import Model
-from todb.config import InputFileConfig
+
+DEFAULT_FILE_ENCODING = "utf-8"
+DEFAULT_HAS_HEADER = True
+DEFAULT_ROW_DELIMITER = "\n"
+DEFAULT_CELL_DELIMITER = ","
+
+
+class InputFileConfig(Model):
+    def __init__(self, conf_dict: Dict[str, Any]) -> None:
+        self.conf_dict = conf_dict
+
+    def file_encoding(self) -> str:
+        return str(self.conf_dict.get("encoding", DEFAULT_FILE_ENCODING))
+
+    def has_header(self) -> bool:
+        return bool(self.conf_dict.get("has_header", DEFAULT_HAS_HEADER))
+
+    def row_delimiter(self) -> str:
+        return str(self.conf_dict.get("row_delimiter", DEFAULT_ROW_DELIMITER))
+
+    def cell_delimiter(self) -> str:
+        return str(self.conf_dict.get("cell_delimiter", DEFAULT_CELL_DELIMITER))
+
 
 _CONF_TYPE_TO_PYTHON_TYPE = {
     "bool": bool,

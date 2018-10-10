@@ -4,8 +4,8 @@ from sqlalchemy import MetaData, Column, Table, select, func, Integer
 from sqlalchemy.engine import Engine, create_engine
 from sqlalchemy.pool import NullPool
 
-from todb.config import ToDbConfig
-from todb.data_types import ConfColumn
+from todb.todb_config import ToDbConfig
+from todb.data_model import ConfColumn
 
 
 class SqlClient(object):

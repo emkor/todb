@@ -2,8 +2,8 @@ import unittest
 from datetime import date, time, datetime
 
 from test.test_db_utils import setup_db_repository_test_class, get_test_db_engine
-from todb.config import ToDbConfig
-from todb.data_types import ConfColumn
+from todb.todb_config import ToDbConfig
+from todb.data_model import ConfColumn
 from todb.sql_client import SqlClient
 
 

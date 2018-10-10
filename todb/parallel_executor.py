@@ -1,8 +1,8 @@
 import multiprocessing as mp
 from typing import List, Tuple
 
-from todb.config import ToDbConfig, InputFileConfig
-from todb.data_types import ConfColumn
+from todb.todb_config import ToDbConfig
+from todb.data_model import ConfColumn, InputFileConfig
 from todb.entity_builder import EntityBuilder
 from todb.parsing import CsvParser
 from todb.importer import Importer
@@ -10,7 +10,8 @@ from todb.sql_client import SqlClient
 
 
 class ParallelExecutor(object):
-    def __init__(self, todb_config: ToDbConfig, input_file_config: InputFileConfig, columns: List[ConfColumn], table_name: str) -> None:
+    def __init__(self, todb_config: ToDbConfig, input_file_config: InputFileConfig, columns: List[ConfColumn],
+                 table_name: str) -> None:
         self.todb_config = todb_config
         self.input_file_config = input_file_config
         self.columns = columns

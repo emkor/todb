@@ -1,7 +1,7 @@
 import unittest
 from datetime import datetime, date, time
 
-from todb.data_types import ConfColumn
+from todb.data_model import ConfColumn
 from todb.entity_builder import EntityBuilder
 
 

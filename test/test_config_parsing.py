@@ -1,8 +1,8 @@
 import json
 import unittest
 
-from todb.config import ToDbConfig, DEFAULT_DB_URL, DEFAULT_PARSING_BUFFER_SIZE_kB, DEFAULT_PARSING_CONCURRENCY, \
-    InputFileConfig
+from todb.data_model import InputFileConfig
+from todb.todb_config import ToDbConfig, DEFAULT_DB_URL, DEFAULT_PARSING_BUFFER_SIZE_kB, DEFAULT_PARSING_CONCURRENCY
 
 TO_DB_CONFIG = """
 {

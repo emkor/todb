@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import Mock, ANY
 
-from todb.data_types import ConfColumn
+from todb.data_model import ConfColumn
 from todb.entity_builder import EntityBuilder
 from todb.importer import Importer
 from todb.sql_client import SqlClient

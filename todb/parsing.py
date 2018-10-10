@@ -1,6 +1,7 @@
 from typing import Iterator, List
 
-from todb.config import ToDbConfig, InputFileConfig
+from todb.data_model import InputFileConfig
+from todb.todb_config import ToDbConfig
 
 
 class CsvParser(object):
