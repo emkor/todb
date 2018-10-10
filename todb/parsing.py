@@ -12,7 +12,7 @@ class CsvParser(object):
     def read_rows_in_chunks(self, file_path: str) -> Iterator[List[List[str]]]:
         buffer_size_bytes = round(self.todb_config.chunk_size_kB() * 1000, ndigits=None)
         cached_last_line = ""
-        has_header = self.input_file_config.has_header()
+        has_header_row = self.input_file_config.has_header_row()
         with open(file_path, "rb") as input_file:
             while True:
                 data = input_file.read(buffer_size_bytes)
@@ -22,9 +22,9 @@ class CsvParser(object):
                     one_line = cached_last_line + data.decode(self.input_file_config.file_encoding())
                     rows = one_line.split(self.input_file_config.row_delimiter())
                     cached_last_line = rows.pop(-1)  # last line may not be complete up to row delimiter!
-                    if has_header:
+                    if has_header_row:
                         rows.pop(0)  # remove first row as header and don't remove it again
-                        has_header = False
+                        has_header_row = False
                     cells_in_rows = [r.split(self.input_file_config.cell_delimiter()) for r in rows]
                     yield cells_in_rows
                 except Exception as e:

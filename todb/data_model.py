@@ -8,7 +8,7 @@ from sqlalchemy.sql.type_api import TypeEngine
 from todb.abstract import Model
 
 DEFAULT_FILE_ENCODING = "utf-8"
-DEFAULT_HAS_HEADER = True
+DEFAULT_HAS_HEADER_ROW = True
 DEFAULT_ROW_DELIMITER = "\n"
 DEFAULT_CELL_DELIMITER = ","
 
@@ -20,8 +20,8 @@ class InputFileConfig(Model):
     def file_encoding(self) -> str:
         return str(self.conf_dict.get("encoding", DEFAULT_FILE_ENCODING))
 
-    def has_header(self) -> bool:
-        return bool(self.conf_dict.get("has_header", DEFAULT_HAS_HEADER))
+    def has_header_row(self) -> bool:
+        return bool(self.conf_dict.get("has_header_row", DEFAULT_HAS_HEADER_ROW))
 
     def row_delimiter(self) -> str:
         return str(self.conf_dict.get("row_delimiter", DEFAULT_ROW_DELIMITER))
