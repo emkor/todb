@@ -10,11 +10,18 @@ class Importer(object):
         self.sql_client = sql_client
         self.table_name = table_name
 
-    def parse_and_import(self, rows: List[List[str]]) -> None:
+    def parse_and_import(self, rows: List[List[str]]) -> List[List[str]]:
         list_of_model_dicts = []
+        incomplete_entities = []
         for row_cells in rows:
             entity = self.entity_builder.to_entity(row_cells)
             if entity is not None:
                 list_of_model_dicts.append(entity)
-        self.sql_client.insert_into(table=self.sql_client.get_table(self.table_name),
-                                    objects=list_of_model_dicts)
+            else:
+                incomplete_entities.append(row_cells)
+        successful = self.sql_client.insert_into(table=self.sql_client.get_table(self.table_name),
+                                                 objects=list_of_model_dicts)
+        if not successful:
+            return rows
+        else:
+            return incomplete_entities

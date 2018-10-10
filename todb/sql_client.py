@@ -22,14 +22,19 @@ class SqlClient(object):
             meta.create_all(self._get_db_engine())
         return table
 
-    def insert_into(self, table: Table, objects: List[Dict[str, Any]]):
-        db_connection = self._get_db_engine().connect()
-        try:
-            db_connection.execute(table.insert(), objects)
-            db_connection.close()
-        except Exception as e:
-            db_connection.close()
-            print("Could not insert: {} (objects: {})".format(e, objects))
+    def insert_into(self, table: Table, objects: List[Dict[str, Any]]) -> bool:
+        if objects:
+            db_connection = self._get_db_engine().connect()
+            try:
+                db_connection.execute(table.insert(), objects)
+                db_connection.close()
+                return True
+            except Exception as e:
+                print("Failure on inserting {} objects: {} (objects: {})".format(len(objects), e, objects))
+                db_connection.close()
+                return False
+        else:
+            return True
 
     def drop_table(self, name: str) -> None:
         the_table = self.get_table(name)

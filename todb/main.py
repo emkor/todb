@@ -20,11 +20,13 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument('config', type=str, help='File containing parsing config')
     parser.add_argument('model', type=str, help='File containing model of CSV data')
     parser.add_argument('input', type=str, help='A CSV/TSV file to import into DB')
+    parser.add_argument('fail_output', type=str, help='A CSV/TSV file that will contain rows failing to insert into DB')
     parser.add_argument('--table', type=str, help='Table name to insert data to')
     return parser.parse_args()
 
 
-def _to_db(config_file_name: str, model_file_name: str, input_file_name: str, table_name: Optional[str] = None) -> None:
+def _to_db(config_file_name: str, model_file_name: str, input_file_name: str, failed_rows_file: str,
+           table_name: Optional[str] = None) -> None:
     todb_config = config_from_file(config_file_name)
     print("Parsed config to: {}".format(todb_config))
 
@@ -33,7 +35,7 @@ def _to_db(config_file_name: str, model_file_name: str, input_file_name: str, ta
 
     current_time = datetime.utcnow().replace(microsecond=0).time().isoformat()
     table_name = table_name or "todb_{}_{}".format(path.basename(input_file_name)[:32], current_time)
-    executor = ParallelExecutor(todb_config, file_config, columns, table_name)
+    executor = ParallelExecutor(todb_config, file_config, columns, table_name, failed_rows_file)
     csv_rows, db_rows = executor.start(input_file_name)
     print("Inserted {} rows out of {} available ({}%)".format(db_rows, csv_rows, round(db_rows * 100 / csv_rows)))
 
@@ -46,22 +48,27 @@ def cli_main() -> None:
 def main(args: argparse.Namespace) -> None:
     if args.config is not None and path.exists(args.config) \
             and args.model is not None and path.exists(args.model) \
+            and args.fail_output is not None and not path.exists(args.fail_output) \
             and args.input is not None and path.exists(args.input):
-        try:
-            start_time = datetime.utcnow()
-            print("Running with: {}!".format(args))
-            input_file_size = path.getsize(args.input)
-            _to_db(config_file_name=args.config, model_file_name=args.model,
-                   input_file_name=args.input, table_name=args.table)
-            took_seconds = seconds_between(start_time)
-            velocity_kBps = (input_file_size / 1000) / took_seconds
-            print("Done in {:2.3f}s ({:3.1f} kB/s)!".format(took_seconds, velocity_kBps))
-            exit(EXIT_CODE_OK)
-        except Exception as e:
-            print("Error: {}".format(e))
-            exit(EXIT_CODE_FAILURE)
+        if args.fail_output is not None and not path.exists(args.fail_output):
+            try:
+                start_time = datetime.utcnow()
+                print("Running with: {}!".format(args))
+                input_file_size = path.getsize(args.input)
+                _to_db(config_file_name=args.config, model_file_name=args.model,
+                       input_file_name=args.input, table_name=args.table, failed_rows_file=args.fail_output)
+                took_seconds = seconds_between(start_time)
+                velocity_kBps = (input_file_size / 1000) / took_seconds
+                print("Done in {:2.3f}s ({:3.1f} kB/s)!".format(took_seconds, velocity_kBps))
+                exit(EXIT_CODE_OK)
+            except Exception as e:
+                print("Error: {}".format(e))
+                exit(EXIT_CODE_FAILURE)
+        else:
+            print("Did not provide fail_output file or pointed file already exists")
+            exit(EXIT_CODE_USER_ERROR)
     else:
-        print("Did not provide config, model or input or those files does not exist.")
+        print("Did not provide config, model, input file or any of these files does not exist.")
         exit(EXIT_CODE_USER_ERROR)
 
 

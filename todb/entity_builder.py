@@ -18,10 +18,6 @@ BOOLEAN_MAPPINGS = {
 }
 
 
-class NullInRequiredColumn(ValueError):
-    pass
-
-
 class EntityBuilder(object):
     def __init__(self, columns: List[ConfColumn]) -> None:
         self.columns = columns
@@ -30,7 +26,7 @@ class EntityBuilder(object):
         if len(self.columns) <= len(cells_in_row):
             try:
                 return {c.name: self._cast_value_to_sql_compatible(c, cells_in_row[c.col_index]) for c in self.columns}
-            except NullInRequiredColumn as e:
+            except Exception as e:
                 print("Can not build entity from row {}: {}".format(cells_in_row, e))
                 return None
         else:
@@ -44,7 +40,7 @@ class EntityBuilder(object):
             if column.nullable:
                 return None
             else:
-                raise NullInRequiredColumn("Value for column {} is empty!".format(column.name))
+                raise ValueError("Value for column {} is empty!".format(column.name))
         try:
             if column.python_type in (datetime, date, time):
                 parsed_time = parse(value)
