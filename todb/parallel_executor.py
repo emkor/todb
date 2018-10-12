@@ -20,7 +20,7 @@ class ParallelExecutor(object):
         self.failed_rows_file = failed_rows_file
 
     def start(self, input_file_name: str) -> Tuple[int, int]:
-        sql_client = SqlClient(self.params.db_url)
+        sql_client = SqlClient(self.params.sql_db)
         table = sql_client.init_table(self.table_name, self.columns)
         initial_row_count = sql_client.count(table)
 
@@ -32,7 +32,7 @@ class ParallelExecutor(object):
         tasks_queue = mp.JoinableQueue(maxsize=2 * self.params.processes)  # type: ignore
         parser_workers = [
             ParsingWorker(tasks_queue, unsuccessful_rows_queue,
-                          EntityBuilder(self.columns), SqlClient(self.params.db_url), self.table_name)
+                          EntityBuilder(self.columns), SqlClient(self.params.sql_db), self.table_name)
             for _ in range(self.params.processes)
         ]
         for w in parser_workers:

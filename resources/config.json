@@ -1,7 +1,0 @@
-{
-  "parsing": {
-    "chunk_size_kB": 64,
-    "processes": 4
-  },
-  "db_url": "postgresql://user:secret@localhost/default"
-}

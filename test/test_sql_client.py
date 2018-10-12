@@ -1,8 +1,7 @@
 import unittest
 from datetime import date, time, datetime
 
-from test.test_db_utils import setup_db_repository_test_class, get_test_db_engine
-from todb.todb_config import ToDbConfig
+from test.test_db_utils import setup_db_repository_test_class, get_test_db_engine, TEST_SQL_DB_URL
 from todb.data_model import ConfColumn
 from todb.sql_client import SqlClient
 
@@ -13,7 +12,6 @@ class SqlClientTest(unittest.TestCase):
         setup_db_repository_test_class(cls)
 
     def setUp(self):
-        self.config = ToDbConfig({"db": {""}})
         self.columns = [ConfColumn("test_string", 0, "string",
                                    nullable=True, indexed=True, unique=True),
                         ConfColumn("test_int", 1, "int",
@@ -42,7 +40,7 @@ class SqlClientTest(unittest.TestCase):
                 "test_datetime": datetime(2016, 4, 21, 10, 45, 21)
             }
         ]
-        self.client = SqlClient(ToDbConfig({}), get_test_db_engine(debug=True))
+        self.client = SqlClient(TEST_SQL_DB_URL, get_test_db_engine(debug=True))
         self.table_name = "test_table"
 
     def tearDown(self):

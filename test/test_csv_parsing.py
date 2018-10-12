@@ -1,7 +1,6 @@
 import unittest
 
 from todb.data_model import InputFileConfig
-from todb.todb_config import ToDbConfig
 from todb.parsing import CsvParser
 from todb.util import proj_path_to_abs
 

@@ -18,7 +18,7 @@ def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description='Import CSV/TSV files into any SQL DB system')
     parser.add_argument('model', type=str, help='JSON file containing CSV data model')
     parser.add_argument('input', type=str, help='CSV/TSV file to import into DB')
-    parser.add_argument('db_url', type=str,
+    parser.add_argument('--sql_db', type=str,
                         help='A sqlalchemy-compatible database URL; see https://docs.sqlalchemy.org/en/latest/core/engines.html#database-urls')
     parser.add_argument('fail_output', type=str, help='A CSV/TSV file that will contain rows failing to insert into DB')
     parser.add_argument('--table', type=str, help='Table name to insert data to')
