@@ -26,6 +26,8 @@ class SqlClient(DbClient):
             db_connection = self._db_engine.connect()
             try:
                 table = self._get_table(table_name)
+                if table is None:
+                    raise Exception("There's not table named {} in {}".format(table_name, self.db_url))
                 db_connection.execute(table.insert(), objects)
                 db_connection.close()
                 return True
