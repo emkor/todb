@@ -11,7 +11,7 @@ from todb.db_client import DbClient
 class SqlClient(DbClient):
     def __init__(self, db_url: str, db_engine: Optional[Engine] = None) -> None:
         self.db_url = db_url
-        self._db_engine = db_engine or self._get_db_engine()
+        self._db_engine = db_engine
 
     def init_table(self, name: str, columns: List[ConfColumn]) -> None:
         meta = MetaData()
@@ -19,11 +19,11 @@ class SqlClient(DbClient):
         if table is None:
             print("Creating table named {}...".format(name))
             table = self._sql_table_from_columns(meta, name, columns)
-            meta.create_all(self._db_engine, tables=[table])
+            meta.create_all(self._get_db_engine(), tables=[table])
 
     def insert_into(self, table_name: str, objects: List[Dict[str, Any]]) -> bool:
         if objects:
-            db_connection = self._db_engine.connect()
+            db_connection = self._get_db_engine().connect()
             try:
                 table = self._get_table(table_name)
                 if table is None:
