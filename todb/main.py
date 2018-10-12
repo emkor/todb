@@ -21,6 +21,8 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument('fail_output', type=str, help='A CSV/TSV file that will contain rows failing to insert into DB')
     parser.add_argument('--sql_db', type=str,
                         help='A sqlalchemy-compatible database URL; see https://docs.sqlalchemy.org/en/latest/core/engines.html#database-urls')
+    parser.add_argument('--cass_db', type=str,
+                        help='Cassandra connection string in format host:port')
     parser.add_argument('--table', type=str, help='Table name to insert data to')
     parser.add_argument('--proc', type=int,
                         help='Number of processes used to parse rows and insert data into DB; default: 2')

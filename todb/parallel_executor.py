@@ -1,6 +1,7 @@
 import multiprocessing as mp
 from typing import List, Tuple
 
+from todb.cass_client import CassandraClient
 from todb.fail_row_handler import FailRowHandler
 from todb.params import InputParams
 from todb.data_model import ConfColumn, InputFileConfig
@@ -20,9 +21,12 @@ class ParallelExecutor(object):
         self.failed_rows_file = failed_rows_file
 
     def start(self, input_file_name: str) -> Tuple[int, int]:
-        sql_client = SqlClient(self.params.sql_db)
-        sql_client.init_table(self.table_name, self.columns)
-        initial_row_count = sql_client.count(self.table_name)
+        if self.params.sql_db:
+            db_client = SqlClient(self.params.sql_db)
+        else:
+            db_client = CassandraClient(self.params.cass_db.split(":")[0], self.params.cass_db.split(":")[1])
+        db_client.init_table(self.table_name, self.columns)
+        initial_row_count = db_client.count(self.table_name)
 
         unsuccessful_rows_queue = mp.JoinableQueue(maxsize=2 * self.params.processes)  # type: ignore
         fail_row_handler = FailRowHandler(self.input_file_config, self.failed_rows_file)
@@ -32,7 +36,9 @@ class ParallelExecutor(object):
         tasks_queue = mp.JoinableQueue(maxsize=2 * self.params.processes)  # type: ignore
         parser_workers = [
             ParsingWorker(tasks_queue, unsuccessful_rows_queue,
-                          EntityBuilder(self.columns), SqlClient(self.params.sql_db), self.table_name)
+                          EntityBuilder(self.columns), SqlClient(self.params.sql_db)
+                          if self.params.sql_db else CassandraClient(self.params.cass_db.split(":")[0], self.params.cass_db.split(":")[1]),
+                          self.table_name)
             for _ in range(self.params.processes)
         ]
         for w in parser_workers:
@@ -53,7 +59,7 @@ class ParallelExecutor(object):
         unsuccessful_rows_queue.put(None)
         unsuccessful_rows_queue.join()
 
-        return row_counter, sql_client.count(self.table_name) - initial_row_count
+        return row_counter, db_client.count(self.table_name) - initial_row_count
 
 
 class ParsingWorker(mp.Process):
