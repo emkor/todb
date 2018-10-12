@@ -16,5 +16,6 @@ class ImporterTest(unittest.TestCase):
 
     def test_should_call_sql_client_for_insert(self):
         self.importer.parse_and_import([["string_0"], ["string_1"]])
-        self.mock_sql_client.insert_into.assert_called_once_with(table=ANY, objects=[{"test_string": "string_0"},
-                                                                                     {"test_string": "string_1"}])
+        self.mock_sql_client.insert_into.assert_called_once_with(objects=[{"test_string": "string_0"},
+                                                                          {"test_string": "string_1"}],
+                                                                 table_name="some_table")

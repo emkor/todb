@@ -48,13 +48,12 @@ class SqlClientTest(unittest.TestCase):
 
     def test_should_create_and_drop_tables(self):
         self.client.init_table(self.table_name, self.columns)
-        actual_table = self.client.get_table(self.table_name)
+        actual_table = self.client._get_table(self.table_name)
         self.assertIsNotNone(actual_table)
         self.assertEqual(len(actual_table.columns), len(self.columns) + 1)
 
     def test_should_create_table_and_insert_data(self):
         self.client.init_table(self.table_name, self.columns)
-        actual_table = self.client.get_table(self.table_name)
-        self.client.insert_into(actual_table, self.objects)
-        row_count = self.client.count(actual_table)
+        self.client.insert_into(self.table_name, self.objects)
+        row_count = self.client.count(self.table_name)
         self.assertEqual(row_count, len(self.objects))

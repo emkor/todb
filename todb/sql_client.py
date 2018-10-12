@@ -5,26 +5,27 @@ from sqlalchemy.engine import Engine, create_engine
 from sqlalchemy.pool import NullPool
 
 from todb.data_model import ConfColumn
+from todb.db_client import DbClient
 
 
-class SqlClient(object):
+class SqlClient(DbClient):
     def __init__(self, db_url: str, db_engine: Optional[Engine] = None) -> None:
         self.db_url = db_url
-        self._db_engine = db_engine
+        self._db_engine = db_engine or self._get_db_engine()
 
-    def init_table(self, name: str, columns: List[ConfColumn]) -> Table:
+    def init_table(self, name: str, columns: List[ConfColumn]) -> None:
         meta = MetaData()
-        table = self.get_table(name)
+        table = self._get_table(name)
         if table is None:
             print("Creating table named {}...".format(name))
             table = self._sql_table_from_columns(meta, name, columns)
-            meta.create_all(self._get_db_engine())
-        return table
+            meta.create_all(self._db_engine, tables=[table])
 
-    def insert_into(self, table: Table, objects: List[Dict[str, Any]]) -> bool:
+    def insert_into(self, table_name: str, objects: List[Dict[str, Any]]) -> bool:
         if objects:
-            db_connection = self._get_db_engine().connect()
+            db_connection = self._db_engine.connect()
             try:
+                table = self._get_table(table_name)
                 db_connection.execute(table.insert(), objects)
                 db_connection.close()
                 return True
@@ -36,11 +37,11 @@ class SqlClient(object):
             return True
 
     def drop_table(self, name: str) -> None:
-        the_table = self.get_table(name)
+        the_table = self._get_table(name)
         if the_table is not None:
             the_table.drop(bind=self._get_db_engine())
 
-    def get_table(self, name: str) -> Optional[Table]:
+    def _get_table(self, name: str) -> Optional[Table]:
         meta = MetaData()
         meta.reflect(bind=self._get_db_engine())
         try:
@@ -49,9 +50,10 @@ class SqlClient(object):
             print("Could not find DB table named {}: {}".format(name, e))
             return None
 
-    def count(self, table: Table) -> int:
+    def count(self, table_name: str) -> int:
         db_connection = self._get_db_engine().connect()
         try:
+            table = self._get_table(table_name)
             count = db_connection.scalar(
                 select([func.count()]).select_from(table)
             )

@@ -19,7 +19,7 @@ class Importer(object):
                 list_of_model_dicts.append(entity)
             else:
                 incomplete_entities.append(row_cells)
-        successful = self.sql_client.insert_into(table=self.sql_client.get_table(self.table_name),
+        successful = self.sql_client.insert_into(table_name=self.table_name,
                                                  objects=list_of_model_dicts)
         if not successful:
             return rows
