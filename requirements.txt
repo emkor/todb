@@ -1,3 +1,5 @@
+cassandra-driver
+lz4
 mypy
 pytest
 pytest-cov

@@ -52,6 +52,17 @@ _CONF_TYPE_TO_SQL_TYPE = {
     "float": Float,
 }
 
+_CONF_TYPE_TO_CASS_TYPE = {
+    "bool": "boolean",
+    "string": "varchar",
+    "date": "date",
+    "time": "time",
+    "datetime": "timestamp",
+    "int": "int",
+    "bigint": "bigint",
+    "float": "float",
+}
+
 
 def get_python_type(conf_type: str) -> Type:
     return _CONF_TYPE_TO_PYTHON_TYPE[conf_type]
@@ -59,6 +70,10 @@ def get_python_type(conf_type: str) -> Type:
 
 def get_sql_type(conf_type: str) -> Type[TypeEngine]:
     return _CONF_TYPE_TO_SQL_TYPE[conf_type]
+
+
+def get_cass_type(conf_type: str) -> str:
+    return _CONF_TYPE_TO_CASS_TYPE[conf_type]
 
 
 class ConfColumn(Model):
@@ -72,9 +87,7 @@ class ConfColumn(Model):
         self.conf_type = conf_type
         self.python_type = get_python_type(self.conf_type)
         self.sql_type = get_sql_type(self.conf_type)
-
-    def is_key(self) -> bool:
-        return bool(self.indexed and self.unique)
+        self.cass_type = get_cass_type(self.conf_type)
 
 
 def parse_model_file(file_path: str) -> Tuple[List[ConfColumn], InputFileConfig]:
