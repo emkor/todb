@@ -1,5 +1,4 @@
 import argparse
-from typing import Optional
 
 from todb.params import InputParams
 from todb.util import seconds_between
@@ -7,7 +6,6 @@ from todb.util import seconds_between
 from datetime import datetime
 from os import path
 
-from todb.todb_config import config_from_file
 from todb.data_model import parse_model_file
 from todb.parallel_executor import ParallelExecutor
 
@@ -24,7 +22,7 @@ def _parse_args() -> argparse.Namespace:
                         help='A sqlalchemy-compatible database URL; see https://docs.sqlalchemy.org/en/latest/core/engines.html#database-urls')
     parser.add_argument('fail_output', type=str, help='A CSV/TSV file that will contain rows failing to insert into DB')
     parser.add_argument('--table', type=str, help='Table name to insert data to')
-    parser.add_argument('--processes', type=int,
+    parser.add_argument('--proc', type=int,
                         help='Number of processes used to parse rows and insert data into DB; default: 2')
     parser.add_argument('--chunk', type=int,
                         help='Size (in kB) of chunk of data that is read from input file and sent to DB in single SQL statement; default: 16')
@@ -35,8 +33,8 @@ def _to_db(params: InputParams) -> None:
     columns, file_config = parse_model_file(params.model_path)
     print("Parsed model columns: {}".format(columns))
 
-    executor = ParallelExecutor(params, file_config, columns, params.table_name, failed_rows_file)
-    csv_rows, db_rows = executor.start(input_file_name)
+    executor = ParallelExecutor(params, file_config, columns, params.table_name, params.fail_output_path)
+    csv_rows, db_rows = executor.start(params.input_path)
     print("Inserted {} rows out of {} available ({}%)".format(db_rows, csv_rows, round(db_rows * 100 / csv_rows)))
 
 

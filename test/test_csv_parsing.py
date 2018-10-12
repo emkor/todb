@@ -9,9 +9,8 @@ from todb.util import proj_path_to_abs
 class CsvParsingTest(unittest.TestCase):
     def test_should_parse_example_csv_file(self):
         abs_csv_path = proj_path_to_abs("resources/example_input.csv")
-        todb_config = ToDbConfig({"parsing": {"chunk_size_kB": 1}})
         in_file_config = InputFileConfig({"has_header": True})
-        parser = CsvParser(in_file_config, todb_config)
+        parser = CsvParser(in_file_config, chunk_size_kB=1)
 
         all_lines = []
         for lines in parser.read_rows_in_chunks(abs_csv_path):
