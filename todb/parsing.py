@@ -1,16 +1,15 @@
 from typing import Iterator, List
 
 from todb.data_model import InputFileConfig
-from todb.todb_config import ToDbConfig
 
 
 class CsvParser(object):
-    def __init__(self, input_file_config: InputFileConfig, todb_config: ToDbConfig) -> None:
-        self.todb_config = todb_config
+    def __init__(self, input_file_config: InputFileConfig, chunk_size_kB: int) -> None:
+        self.chunk_size_kB = chunk_size_kB
         self.input_file_config = input_file_config
 
     def read_rows_in_chunks(self, file_path: str) -> Iterator[List[List[str]]]:
-        buffer_size_bytes = round(self.todb_config.chunk_size_kB() * 1000, ndigits=None)
+        buffer_size_bytes = round(self.chunk_size_kB * 1000, ndigits=None)
         cached_last_line = ""
         has_header_row = self.input_file_config.has_header_row()
         with open(file_path, "rb") as input_file:

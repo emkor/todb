@@ -2,7 +2,7 @@ import multiprocessing as mp
 from typing import List, Tuple
 
 from todb.fail_row_handler import FailRowHandler
-from todb.todb_config import ToDbConfig
+from todb.params import InputParams
 from todb.data_model import ConfColumn, InputFileConfig
 from todb.entity_builder import EntityBuilder
 from todb.parsing import CsvParser
@@ -11,46 +11,46 @@ from todb.sql_client import SqlClient
 
 
 class ParallelExecutor(object):
-    def __init__(self, todb_config: ToDbConfig, input_file_config: InputFileConfig, columns: List[ConfColumn],
+    def __init__(self, params: InputParams, input_file_config: InputFileConfig, columns: List[ConfColumn],
                  table_name: str, failed_rows_file: str) -> None:
-        self.todb_config = todb_config
+        self.params = params
         self.input_file_config = input_file_config
         self.columns = columns
         self.table_name = table_name
         self.failed_rows_file = failed_rows_file
 
     def start(self, input_file_name: str) -> Tuple[int, int]:
-        sql_client = SqlClient(self.todb_config)
+        sql_client = SqlClient(self.params.db_url)
         table = sql_client.init_table(self.table_name, self.columns)
         initial_row_count = sql_client.count(table)
 
-        unsuccessful_rows_queue = mp.JoinableQueue(maxsize=2 * self.todb_config.processes())  # type: ignore
+        unsuccessful_rows_queue = mp.JoinableQueue(maxsize=2 * self.params.processes)  # type: ignore
         fail_row_handler = FailRowHandler(self.input_file_config, self.failed_rows_file)
         failure_handling_worker = UnsuccessfulRowsHandlingWorker(unsuccessful_rows_queue, fail_row_handler)
         failure_handling_worker.start()
 
-        tasks_queue = mp.JoinableQueue(maxsize=2 * self.todb_config.processes())  # type: ignore
+        tasks_queue = mp.JoinableQueue(maxsize=2 * self.params.processes)  # type: ignore
         parser_workers = [
             ParsingWorker(tasks_queue, unsuccessful_rows_queue,
-                          EntityBuilder(self.columns), SqlClient(self.todb_config), self.table_name)
-            for _ in range(self.todb_config.processes())
+                          EntityBuilder(self.columns), SqlClient(self.params.db_url), self.table_name)
+            for _ in range(self.params.processes)
         ]
         for w in parser_workers:
             w.start()
 
         print("Inserting data into SQL...")
-        parser = CsvParser(self.input_file_config, self.todb_config)
+        parser = CsvParser(self.input_file_config, self.params.chunk_size_kB)
         row_counter = 0
         for cells_in_rows in parser.read_rows_in_chunks(input_file_name):
             row_counter += len(cells_in_rows)
-            print("Parsed {} rows...".format(row_counter))
+            print("Parsed {} rows ({} so far)...".format(len(cells_in_rows), row_counter))
             tasks_queue.put(cells_in_rows)
+        print("Waiting till values will be stored in DB...")
         [tasks_queue.put(None) for w in parser_workers]
         tasks_queue.join()
-        print("Waiting till values will be stored in DB...")
 
-        unsuccessful_rows_queue.put(None)
         print("Waiting till failed rows will be stored in file...")
+        unsuccessful_rows_queue.put(None)
         unsuccessful_rows_queue.join()
 
         return row_counter, sql_client.count(table) - initial_row_count

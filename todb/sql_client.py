@@ -4,13 +4,12 @@ from sqlalchemy import MetaData, Column, Table, select, func, Integer
 from sqlalchemy.engine import Engine, create_engine
 from sqlalchemy.pool import NullPool
 
-from todb.todb_config import ToDbConfig
 from todb.data_model import ConfColumn
 
 
 class SqlClient(object):
-    def __init__(self, todb_config: ToDbConfig, db_engine: Optional[Engine] = None) -> None:
-        self.todb_config = todb_config
+    def __init__(self, db_url: str, db_engine: Optional[Engine] = None) -> None:
+        self.db_url = db_url
         self._db_engine = db_engine
 
     def init_table(self, name: str, columns: List[ConfColumn]) -> Table:
@@ -64,8 +63,8 @@ class SqlClient(object):
 
     def _get_db_engine(self) -> Engine:
         if self._db_engine is None:
-            print("Connecting to DB with connection {}".format(self.todb_config.db_url()))
-            self._db_engine = create_engine(self.todb_config.db_url(), echo=False, poolclass=NullPool)
+            print("Connecting to DB with connection {}".format(self.db_url))
+            self._db_engine = create_engine(self.db_url, echo=False, poolclass=NullPool)
         return self._db_engine
 
     def _sql_table_from_columns(self, sql_metadata: MetaData, table_name: str, columns: List[ConfColumn]) -> Table:
