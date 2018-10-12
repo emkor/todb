@@ -13,16 +13,16 @@ def proj_path_to_abs(rel_project_path: str) -> str:
     return path.abspath(path.join(project_directory, project_dir_name, rel_project_path))
 
 
-def limit_or_default(value: int, default: Optional[int] = None,
+def limit_or_default(value: Optional[int], default: int,
                      lower_bound: Optional[int] = None, upper_bound: Optional[int] = None) -> int:
-    if not isinstance(value, int):
-        if default is not None:
-            return default
-        else:
-            raise ValueError("Value of {} is not an int and default was not provided!".format(value))
-    if lower_bound and upper_bound:
-        return min(max(value, lower_bound), upper_bound)
-    elif lower_bound:
-        return max(value, lower_bound)
+    if value is None:
+        return default
     else:
-        return min(value, upper_bound)
+        if lower_bound is not None and upper_bound is not None:
+            return min(max(value, lower_bound), upper_bound)
+        elif lower_bound is not None:
+            return max(value, lower_bound)
+        elif upper_bound is not None:
+            return min(value, upper_bound)
+        else:
+            raise ValueError("Did not provide lower bound and upper bound!")
