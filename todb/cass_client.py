@@ -11,7 +11,6 @@ SEED_TEXT = UUID(int=1248789574)
 ID_COLUMN = ConfColumn("id", -1, "string", nullable=False, indexed=True, unique=True)
 KEY_SPACE = "todb"
 
-
 class CassandraClient(DbClient):
     def __init__(self, cass_host: str, cass_native_port: int, compression: bool = True) -> None:
         self.cass_host = cass_host
@@ -21,11 +20,10 @@ class CassandraClient(DbClient):
 
     def init_table(self, name: str, columns: List[ConfColumn]) -> None:
         connection = self._client.connect()
-        connection.execute(
-            "CREATE KEYSPACE IF NOT EXISTS todb WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 1 };")
+        connection.execute("CREATE KEYSPACE IF NOT EXISTS todb WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 1 };")
         connection.set_keyspace("todb")
         column_definition_str = ",".join(["{} {}".format(c.name, c.cass_type) for c in columns + [ID_COLUMN]])
-        create_table_query = "CREATE TABLE {}({}, PRIMARY KEY ({}))".format(name, column_definition_str, ID_COLUMN.name)
+        create_table_query = "CREATE TABLE IF NOT EXISTS {}({}, PRIMARY KEY ({}))".format(name, column_definition_str, ID_COLUMN.name)
         connection.execute(create_table_query)
 
     def drop_table(self, name: str) -> None:
@@ -37,11 +35,11 @@ class CassandraClient(DbClient):
             try:
                 sorted_col_names = sorted(objects[0].keys())
                 connection = self._client.connect("todb")
-                prep_statement_str = self._build_batch_insert(sorted_col_names, table_name)
+                prep_statement_str = self._build_batch_insert(sorted_col_names, len(objects), table_name)
+                values = self._build_value_list(objects, sorted_col_names)
+
                 prep_statement = connection.prepare(prep_statement_str)
-                for o in objects:
-                    values = self._build_object_values(o, sorted_col_names)
-                    connection.execute(prep_statement, values)
+                connection.execute(prep_statement, values)
                 return True
             except Exception as e:
                 print("Could not insert {} objects into Cassandra DB: {}".format(len(objects), e))
@@ -55,16 +53,21 @@ class CassandraClient(DbClient):
         result = connection.execute("SELECT COUNT(*) FROM {}".format(table_name))
         return int(result[0][0])
 
-    def _build_object_values(self, o: Dict[str, Any], sorted_col_names: List[str]):
-        cells_as_str = ";".join([str(o[c]) for c in sorted_col_names])
-        object_cells = [self._gen_uuid(str(cells_as_str))] + [o[c] for c in sorted_col_names]
-        return object_cells
+    def _build_value_list(self, objects, sorted_col_names):
+        value_obj = []
+        for o in objects:
+            cells_as_str = ";".join([str(o[c]) for c in sorted_col_names])
+            object_cells = [self._gen_uuid(str(cells_as_str))] + [o[c] for c in sorted_col_names]
+            value_obj.extend(object_cells)
+        return value_obj
 
-    def _build_batch_insert(self, sorted_col_names: List[str], table_name):
+    def _build_batch_insert(self, sorted_col_names: List[str], obj_count, table_name):
         single_insert_str = "INSERT INTO {} (id,{}) VALUES (?,{})".format(table_name,
-                                                                          ",".join(sorted_col_names),
-                                                                          ",".join(["?" for _ in sorted_col_names]))
-        return single_insert_str
+                                                                     ",".join(sorted_col_names),
+                                                                     ",".join(["?" for _ in sorted_col_names]))
+        prep_statement_str = "BEGIN BATCH {} APPLY BATCH".format(
+            ";".join([single_insert_str for _ in range(obj_count)]))
+        return prep_statement_str
 
     def _gen_uuid(self, content: str) -> str:
         return str(uuid5(SEED_TEXT, str(content)))
