@@ -54,6 +54,8 @@ class CassandraClient(DbClient):
             else:
                 print("Cassandra can not take up insertion of {} objects!".format(len(objects)))
                 return False
+        else:
+            return True
 
     def count(self, table_name: str) -> int:
         connection = self._client.connect("todb")
