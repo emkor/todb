@@ -5,14 +5,20 @@ importing csv data into any SQL DB in a smart way
 - supported input files:
     - flat-structure (CSVs, TSVs etc.)
 - supported output databases:
-    - Postgres
-    - Sqlite
+    - anything SQLalchemy can use (tested with PostgreSQL and SQLite)
 - performance (time taken / input file size):
     - on quad-core CPU laptop, SSD:
-        - local database and 3-columns of data in 8 MB file: 800-950 kB/s
-        - local database and 8-columns of data in >400 MB file: ~1600 kB/s
+        - local PostgreSQL, 3 columns of data in 8 MB file: `800-950 kB/s`
+        - local PostgreSQL, 9 columns of data in ~120MB file with 256 kB of chunk size: `5200-5900 kB/s`
 
 ## Usage
-- provide credentials to your DB by configuring `db` section of `resources/config.json`
-- describe your SQL table in JSON file (example in `resources/example_model.json`)
-- run with `todb <config.json> <model.json> <input_file.csv>`
+- describe your target SQL table in JSON file (example: `resources/example_model.json` which maps `resources/example_input.csv`)
+- run with `todb <path to model.json> <path to input_file.csv> --sql_db <sqlalchemy formatted SQL DB URL>`
+- try `todb -h` for detailed options
+
+## Full example
+- `todb example_model.json example_input.csv postgresql://user:secret@localhost:5432/default --table example.csv --failures failures.csv --proc 4 --chunk 128`
+    - this will import `example_input.csv` file using mapping from `example_model.json`
+    - into table named `example.csv` on localhost-run PostgreSQL
+    - while logging incorrect rows in file `failures.csv`
+    - using 4 CPU cores and importing file into batches of size roughly `128 kB`

@@ -11,11 +11,15 @@ class FailRowHandler(object):
     def handle_failed_rows(self, rows: List[List[str]]):
         print("Handling {} unsuccessfully inserted rows...".format(len(rows)))
         try:
-            out_string = self.input_file_config.row_delimiter().join(
-                [self.input_file_config.cell_delimiter().join(cells)
-                 for cells in rows])
-            out_bytes = ("\n" + out_string).encode(self.input_file_config.file_encoding())
+            out_bytes = self._convert_rows_to_bytes(rows)
             with open(self.output_file_path, "ab") as out_file:
                 out_file.write(out_bytes)
         except Exception as e:
             print("Could not handle storing rows back in file {}: {}".format(self.output_file_path, e))
+
+    def _convert_rows_to_bytes(self, rows: List[List[str]]) -> bytes:
+        out_string = self.input_file_config.row_delimiter().join(
+            [self.input_file_config.cell_delimiter().join(cells)
+             for cells in rows])
+        out_bytes = ("\n" + out_string).encode(self.input_file_config.file_encoding())
+        return out_bytes
