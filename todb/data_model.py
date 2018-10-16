@@ -1,6 +1,6 @@
 import json
 from datetime import date, time, datetime
-from typing import Type, List, Tuple, Dict, Any
+from typing import Type, List, Tuple, Dict, Any, Union
 
 from sqlalchemy import BigInteger, Integer, Float, Date, Time, DateTime, Boolean, Unicode
 from sqlalchemy.sql.type_api import TypeEngine
@@ -90,14 +90,57 @@ class ConfColumn(Model):
         self.cass_type = get_cass_type(self.conf_type)
 
 
-def parse_model_file(file_path: str) -> Tuple[List[ConfColumn], InputFileConfig]:
+PKEY_AUTOINC = "autoincrement"
+PKEY_UUID = "uuid"
+PKEY_COLS = "columns"
+
+
+class PrimaryKeyConf(Model):
+    def __init__(self, mode: str, columns: List[str]) -> None:
+        self.mode = mode
+        self.columns = columns
+
+    def is_clustered(self):
+        return len(self.columns) > 1
+
+
+def parse_model_file(file_path: str) -> Tuple[List[ConfColumn], PrimaryKeyConf, InputFileConfig]:
     columns = []
     with open(file_path, "r", encoding="utf-8") as model_file:
         model_conf = json.load(model_file)
-    for col_name, col_conf in model_conf.get("columns", {}).items():
+    file_config = InputFileConfig(model_conf.get("file", {}))
+
+    col_names = model_conf.get("columns", {})
+    for col_name, col_conf in col_names.items():
         column = ConfColumn(name=col_name, col_index=col_conf["input_file_column"], conf_type=col_conf["type"],
                             nullable=col_conf.get("nullable", True), indexed=col_conf.get("index", False),
                             unique=col_conf.get("unique", False))
         columns.append(column)
-    file_config = InputFileConfig(model_conf.get("file", {}))
-    return columns, file_config
+
+    pkey_value = model_conf["primary_key"]
+    pkey_conf = _parse_primary_key_config(col_names, pkey_value)
+
+    return columns, pkey_conf, file_config
+
+
+def _parse_primary_key_config(col_names: List[str], pkey_value: Union[str, List[str]]) -> PrimaryKeyConf:
+    pkey_conf = None
+    if pkey_value == PKEY_AUTOINC:
+        pkey_conf = PrimaryKeyConf(PKEY_AUTOINC, [])
+    elif pkey_value == PKEY_UUID:
+        pkey_conf = PrimaryKeyConf(PKEY_UUID, [])
+    elif isinstance(pkey_value, str):
+        if pkey_value in col_names:
+            pkey_conf = PrimaryKeyConf(PKEY_COLS, [pkey_value])
+        else:
+            raise ValueError(
+                "Can not define primary key on non-existing column: {} (available columns: {})".format(pkey_value,
+                                                                                                       col_names))
+    elif isinstance(pkey_value, list):
+        if any([c not in col_names for c in pkey_value]):
+            raise ValueError(
+                "Can not define primary, clustered key from columns: {} (available columns: {})".format(pkey_value,
+                                                                                                        col_names))
+        else:
+            pkey_conf = PrimaryKeyConf(PKEY_COLS, pkey_value)
+    return pkey_conf

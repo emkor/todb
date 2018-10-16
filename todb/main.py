@@ -1,4 +1,5 @@
 import argparse
+import traceback
 
 from todb.params import InputParams
 from todb.util import seconds_between
@@ -32,10 +33,10 @@ def _parse_args() -> argparse.Namespace:
 
 
 def _to_db(params: InputParams) -> None:
-    columns, file_config = parse_model_file(params.model_path)
+    columns, pkey, file_config = parse_model_file(params.model_path)
     print("Parsed model columns: {}".format(columns))
 
-    executor = ParallelExecutor(params, file_config, columns, params.table_name, params.fail_output_path)
+    executor = ParallelExecutor(params, file_config, columns, pkey, params.table_name, params.fail_output_path)
     csv_rows, db_rows = executor.start(params.input_path)
     print("Inserted {} rows out of {} available ({}%)".format(db_rows, csv_rows, round(db_rows * 100 / csv_rows)))
 
@@ -58,7 +59,8 @@ def main(args: argparse.Namespace) -> None:
             print("Done in {:2.3f}s ({:3.1f} kB/s)!".format(took_seconds, velocity_kBps))
             exit(EXIT_CODE_OK)
         except Exception as e:
-            print("Error: {}".format(e))
+            print("Error: {} ()".format(e))
+            traceback.print_exc()
             exit(EXIT_CODE_FAILURE)
     except Exception as e:
         print("Provided arguments were not correct: {} (args: {})".format(e, args))

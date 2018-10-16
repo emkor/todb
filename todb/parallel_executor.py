@@ -5,7 +5,7 @@ from todb.cass_client import CassandraClient
 from todb.db_client import DbClient
 from todb.fail_row_handler import FailRowHandler
 from todb.params import InputParams
-from todb.data_model import ConfColumn, InputFileConfig
+from todb.data_model import ConfColumn, InputFileConfig, PrimaryKeyConf
 from todb.entity_builder import EntityBuilder
 from todb.parsing import CsvParser
 from todb.importer import Importer
@@ -14,7 +14,8 @@ from todb.sql_client import SqlClient
 
 class ParallelExecutor(object):
     def __init__(self, params: InputParams, input_file_config: InputFileConfig, columns: List[ConfColumn],
-                 table_name: str, failed_rows_file: str) -> None:
+                 pkey: PrimaryKeyConf, table_name: str, failed_rows_file: str) -> None:
+        self.pkey = pkey
         self.params = params
         self.input_file_config = input_file_config
         self.columns = columns
@@ -27,7 +28,7 @@ class ParallelExecutor(object):
             db_client = SqlClient(self.params.sql_db)
         else:
             db_client = CassandraClient(self.params.cass_db.split(":")[0], int(self.params.cass_db.split(":")[1]))
-        db_client.init_table(self.table_name, self.columns)
+        db_client.init_table(self.table_name, self.columns, self.pkey)
         initial_row_count = db_client.count(self.table_name)
 
         unsuccessful_rows_queue = mp.JoinableQueue(maxsize=2 * self.params.processes)  # type: ignore

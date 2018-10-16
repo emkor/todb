@@ -4,7 +4,7 @@ from sqlalchemy import MetaData, Column, Table, select, func, Integer
 from sqlalchemy.engine import Engine, create_engine
 from sqlalchemy.pool import NullPool
 
-from todb.data_model import ConfColumn
+from todb.data_model import ConfColumn, PrimaryKeyConf, PKEY_AUTOINC
 from todb.db_client import DbClient
 
 
@@ -13,12 +13,12 @@ class SqlClient(DbClient):
         self.db_url = db_url
         self._db_engine = db_engine
 
-    def init_table(self, name: str, columns: List[ConfColumn]) -> None:
+    def init_table(self, name: str, columns: List[ConfColumn], pkey: PrimaryKeyConf) -> None:
         meta = MetaData()
         table = self._get_table(name)
         if table is None:
             print("Creating table named {}...".format(name))
-            table = self._sql_table_from_columns(meta, name, columns)
+            table = self._sql_table_from_columns(meta, name, columns, pkey)
             meta.create_all(self._get_db_engine(), tables=[table])
 
     def insert_into(self, table_name: str, objects: List[Dict[str, Any]]) -> bool:
@@ -32,7 +32,7 @@ class SqlClient(DbClient):
                 db_connection.close()
                 return True
             except Exception as e:
-                print("Failure on inserting {} objects: {} (objects: {})".format(len(objects), e, objects))
+                print("Failure on inserting {} objects: {}".format(len(objects), e))
                 db_connection.close()
                 return False
         else:
@@ -71,8 +71,12 @@ class SqlClient(DbClient):
             self._db_engine = create_engine(self.db_url, echo=False, poolclass=NullPool)
         return self._db_engine
 
-    def _sql_table_from_columns(self, sql_metadata: MetaData, table_name: str, columns: List[ConfColumn]) -> Table:
-        id_column = Column("id", Integer, primary_key=True, autoincrement=True)
-        sql_columns = [Column(c.name, c.sql_type, nullable=c.nullable, index=c.indexed, unique=c.unique)
-                       for c in columns]
-        return Table(table_name, sql_metadata, id_column, *sql_columns)
+    def _sql_table_from_columns(self, sql_metadata: MetaData, table_name: str, columns: List[ConfColumn],
+                                pkey: PrimaryKeyConf) -> Table:
+        sql_columns = {c.name: Column(c.name, c.sql_type, primary_key=c.name in pkey.columns,
+                                      nullable=c.nullable, index=c.indexed, unique=c.unique)
+                       for c in columns}
+        if pkey.mode == PKEY_AUTOINC:
+            id_column = Column("ID", Integer, primary_key=True, autoincrement=True)
+            sql_columns.update({"id": id_column})
+        return Table(table_name, sql_metadata, *sql_columns.values())

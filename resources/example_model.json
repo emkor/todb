@@ -27,5 +27,6 @@
       "index": false,
       "unique": false
     }
-  }
+  },
+  "primary_key": "timestamp"
 }
