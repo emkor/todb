@@ -143,4 +143,7 @@ def _parse_primary_key_config(col_names: List[str], pkey_value: Union[str, List[
                                                                                                         col_names))
         else:
             pkey_conf = PrimaryKeyConf(PKEY_COLS, pkey_value)
+    else:
+        raise ValueError(
+            "Wrong primary key columns type {}: {}".format(type(pkey_value), pkey_value))
     return pkey_conf

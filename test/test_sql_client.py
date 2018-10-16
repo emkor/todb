@@ -2,7 +2,7 @@ import unittest
 from datetime import date, time, datetime
 
 from test.test_db_utils import setup_db_repository_test_class, get_test_db_engine, TEST_SQL_DB_URL
-from todb.data_model import ConfColumn
+from todb.data_model import ConfColumn, PrimaryKeyConf, PKEY_AUTOINC
 from todb.sql_client import SqlClient
 
 
@@ -28,6 +28,7 @@ class SqlClientTest(unittest.TestCase):
                                    nullable=True, indexed=False, unique=False),
                         ConfColumn("test_datetime", 7, "datetime",
                                    nullable=False, indexed=True, unique=False)]
+        self.primary_key = PrimaryKeyConf(mode=PKEY_AUTOINC, columns=[])
         self.objects = [
             {
                 "test_string": "Some text",
@@ -47,13 +48,13 @@ class SqlClientTest(unittest.TestCase):
         self.client.drop_table(self.table_name)
 
     def test_should_create_and_drop_tables(self):
-        self.client.init_table(self.table_name, self.columns)
+        self.client.init_table(self.table_name, self.columns, self.primary_key)
         actual_table = self.client._get_table(self.table_name)
         self.assertIsNotNone(actual_table)
         self.assertEqual(len(actual_table.columns), len(self.columns) + 1)
 
     def test_should_create_table_and_insert_data(self):
-        self.client.init_table(self.table_name, self.columns)
+        self.client.init_table(self.table_name, self.columns, self.primary_key)
         self.client.insert_into(self.table_name, self.objects)
         row_count = self.client.count(self.table_name)
         self.assertEqual(row_count, len(self.objects))

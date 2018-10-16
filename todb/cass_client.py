@@ -3,7 +3,7 @@ from uuid import UUID, uuid5
 
 from cassandra.cluster import Cluster
 
-from todb.data_model import ConfColumn
+from todb.data_model import ConfColumn, PrimaryKeyConf
 from todb.db_client import DbClient
 
 MAX_STATEMENTS_IN_BATCH = 65536
@@ -19,7 +19,7 @@ class CassandraClient(DbClient):
         self.compression = compression
         self._client = Cluster([self.cass_host], port=self.cass_native_port, compression=self.compression)
 
-    def init_table(self, name: str, columns: List[ConfColumn]) -> None:
+    def init_table(self, name: str, columns: List[ConfColumn], pkey: PrimaryKeyConf) -> None:
         print("Creating keyspace named todb...")
         connection = self._client.connect()
         connection.execute(
