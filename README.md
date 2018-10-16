@@ -31,16 +31,16 @@ Simple tool for importing (even big) CSV/TSV data into SQL databases, focused on
     
 ## JSON model file structure
 Model file describes your CSV/TSV file structure; consists of three sections:
-    - `file`
-        - parameters are self-explanatory, describes input file encoding, separators etc.
-        - see `resources/example_model.json`
-    - `columns`
-        - object describing columns and their types and attributes
-        - each object here is `"column_name": {"input_file_column": ..., "type": ..., "unique": true, "index": true, "nullable": false}, ...` etc.
-        - `input_file_column` is integer, zero-based index of column in input CSV/TSV file to map into the SQL column
-        - `type` is one of currently supported types: `bool`, `string`, `int`, `bigint`, `float`, `datetime`, `date`, `time`
-        - `unique`, `index` and `nullable` boolean-flags are self-explanatory
-    - `primary_key`
-        - in case of value of `autoincrement`, SQL table will have additional `ID` column as a primary key of type `Integer` and with `auto-increment` on
-        - in case of other `string` value, it's treated as existing column name defined under `columns`, and this column will become primary key of a table
-        - in case of array of strings value, primary key will be clustered key as combination of columns defined under `columns` in defined order
+- `file`
+    - parameters are self-explanatory, describes input file encoding, separators etc.
+    - see `resources/example_model.json`
+- `columns`
+    - object describing columns and their types and attributes
+    - each object here is `"column_name": {"input_file_column": ..., "type": ..., "unique": true, "index": true, "nullable": false}, ...` etc.
+    - `input_file_column` is integer, zero-based index of column in input CSV/TSV file to map into the SQL column
+    - `type` is one of currently supported types: `bool`, `string`, `int`, `bigint`, `float`, `datetime`, `date`, `time`
+    - `unique`, `index` and `nullable` boolean-flags are self-explanatory
+- `primary_key`
+    - in case of value of `autoincrement`, SQL table will have additional `ID` column as a primary key of type `Integer` and with `auto-increment` on
+    - in case of other `string` value, it's treated as existing column name defined under `columns`, and this column will become primary key of a table
+    - in case of array of strings value, primary key will be clustered key as combination of columns defined under `columns` in defined order
