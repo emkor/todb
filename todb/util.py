@@ -1,6 +1,6 @@
 from datetime import datetime
 from os import path
-from typing import Optional, Any, List, Dict
+from typing import Optional, Any, List, Dict, Tuple
 from uuid import UUID, uuid5
 
 SEED_TEXT = UUID(int=1248789574)
@@ -39,4 +39,7 @@ def gen_uuid_from_obj(o: Dict[str, Any], sorted_keys: List[str]) -> str:
 def gen_uuid(content: str) -> str:
     return str(uuid5(SEED_TEXT, str(content)))
 
-print(gen_uuid("some text alalal"))
+
+def split_in_half(values: List[Any]) -> Tuple[List[Any], List[Any]]:
+    half = len(values) // 2
+    return values[:half], values[half:]

@@ -38,7 +38,7 @@ def _to_db(params: InputParams) -> None:
 
     executor = ParallelExecutor(params, file_config, columns, pkey, params.table_name, params.fail_output_path)
     csv_rows, db_rows = executor.start(params.input_path)
-    print("Inserted {} rows out of {} available ({}%)".format(db_rows, csv_rows, round(db_rows * 100 / csv_rows)))
+    print("Inserted {} rows out of {} available ({:3.1f}%)".format(db_rows, csv_rows, db_rows * 100 / csv_rows))
 
 
 def cli_main() -> None:
