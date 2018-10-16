@@ -1,8 +1,8 @@
 import unittest
-from datetime import date, time, datetime
 
 from test.test_db_utils import setup_db_repository_test_class, get_test_db_engine, TEST_SQL_DB_URL
 from todb.data_model import ConfColumn, PrimaryKeyConf, PKEY_AUTOINC
+from todb.entity_builder import EntityBuilder
 from todb.sql_client import SqlClient
 
 
@@ -29,19 +29,18 @@ class SqlClientTest(unittest.TestCase):
                         ConfColumn("test_datetime", 7, "datetime",
                                    nullable=False, indexed=True, unique=False)]
         self.primary_key = PrimaryKeyConf(mode=PKEY_AUTOINC, columns=[])
-        self.objects = [
-            {
-                "test_string": "Some text",
-                "test_int": -120,
-                "test_bigint": 65000120960,
-                "test_float": -4.60,
-                "test_bool": True,
-                "test_date": date(2016, 4, 21),
-                "test_time": time(10, 45, 21, 0),
-                "test_datetime": datetime(2016, 4, 21, 10, 45, 21)
-            }
-        ]
-        self.client = SqlClient(TEST_SQL_DB_URL, get_test_db_engine(debug=True))
+        self.rows = [[
+            "Some text",
+            "-120",
+            "65000120960",
+            "-4.60",
+            "true",
+            "2016/04/21",
+            "10:45:21",
+            "2016-04-21 10:45:21",
+        ]]
+        self.entity_builder = EntityBuilder(self.columns)
+        self.client = SqlClient(TEST_SQL_DB_URL, self.entity_builder, get_test_db_engine(debug=True))
         self.table_name = "test_table"
 
     def tearDown(self):
@@ -55,6 +54,6 @@ class SqlClientTest(unittest.TestCase):
 
     def test_should_create_table_and_insert_data(self):
         self.client.init_table(self.table_name, self.columns, self.primary_key)
-        self.client.insert_into(self.table_name, self.objects)
+        self.client.insert_into(self.table_name, self.rows)
         row_count = self.client.count(self.table_name)
-        self.assertEqual(row_count, len(self.objects))
+        self.assertEqual(row_count, len(self.rows))

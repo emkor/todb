@@ -28,5 +28,5 @@
       "unique": false
     }
   },
-  "primary_key": "timestamp"
+  "primary_key": ["timestamp", "artist", "title"]
 }

@@ -1,4 +1,4 @@
-from typing import List, Dict, Any
+from typing import List
 
 from todb.data_model import ConfColumn, PrimaryKeyConf
 
@@ -9,7 +9,7 @@ class DbClient(object):
     def init_table(self, name: str, columns: List[ConfColumn], pkey: PrimaryKeyConf) -> None:
         raise NotImplementedError(ERROR_MSG)
 
-    def insert_into(self, table_name: str, objects: List[Dict[str, Any]]) -> bool:
+    def insert_into(self, table_name: str, objects: List[List[str]]) -> List[List[str]]:
         raise NotImplementedError(ERROR_MSG)
 
     def drop_table(self, name: str) -> None:

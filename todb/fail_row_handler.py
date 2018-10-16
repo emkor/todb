@@ -14,8 +14,8 @@ class FailRowHandler(object):
             out_string = self.input_file_config.row_delimiter().join(
                 [self.input_file_config.cell_delimiter().join(cells)
                  for cells in rows])
-            out_bytes = out_string.encode(self.input_file_config.file_encoding())
-            with open(self.output_file_path, "w+b") as out_file:
+            out_bytes = ("\n" + out_string).encode(self.input_file_config.file_encoding())
+            with open(self.output_file_path, "ab") as out_file:
                 out_file.write(out_bytes)
         except Exception as e:
             print("Could not handle storing rows back in file {}: {}".format(self.output_file_path, e))

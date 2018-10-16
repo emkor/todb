@@ -1,14 +1,12 @@
 import multiprocessing as mp
 from typing import List, Tuple, Optional
 
-from todb.cass_client import CassandraClient
 from todb.db_client import DbClient
 from todb.fail_row_handler import FailRowHandler
 from todb.params import InputParams
 from todb.data_model import ConfColumn, InputFileConfig, PrimaryKeyConf
 from todb.entity_builder import EntityBuilder
 from todb.parsing import CsvParser
-from todb.importer import Importer
 from todb.sql_client import SqlClient
 
 
@@ -23,11 +21,7 @@ class ParallelExecutor(object):
         self.failed_rows_file = failed_rows_file
 
     def start(self, input_file_name: str) -> Tuple[int, int]:
-        db_client = None  # type: Optional[DbClient]
-        if self.params.sql_db:
-            db_client = SqlClient(self.params.sql_db)
-        else:
-            db_client = CassandraClient(self.params.cass_db.split(":")[0], int(self.params.cass_db.split(":")[1]))
+        db_client = SqlClient(self.params.sql_db, EntityBuilder(self.columns))
         db_client.init_table(self.table_name, self.columns, self.pkey)
         initial_row_count = db_client.count(self.table_name)
 
@@ -39,9 +33,7 @@ class ParallelExecutor(object):
         tasks_queue = mp.JoinableQueue(maxsize=2 * self.params.processes)  # type: ignore
         parser_workers = [
             ParsingWorker(tasks_queue, unsuccessful_rows_queue,
-                          EntityBuilder(self.columns), SqlClient(self.params.sql_db)
-                          if self.params.sql_db else CassandraClient(self.params.cass_db.split(":")[0],
-                                                                     int(self.params.cass_db.split(":")[1])),
+                          SqlClient(self.params.sql_db, EntityBuilder(self.columns)),
                           self.table_name)
             for _ in range(self.params.processes)
         ]
@@ -68,9 +60,10 @@ class ParallelExecutor(object):
 
 class ParsingWorker(mp.Process):
     def __init__(self, task_queue: mp.Queue, unsuccessful_rows_queue: mp.Queue,
-                 entity_builder: EntityBuilder, db_client: DbClient, table_name: str) -> None:
+                 db_client: DbClient, table_name: str) -> None:
         super(ParsingWorker, self).__init__()
-        self.importer = Importer(entity_builder, db_client, table_name)
+        self.table_name = table_name
+        self.db_client = db_client
         self.task_queue = task_queue
         self.unsuccessful_rows_queue = unsuccessful_rows_queue
 
@@ -82,7 +75,7 @@ class ParsingWorker(mp.Process):
                 print("{} | ParsingWorker exiting!".format(self.name))  # Poison pill means shutdown
                 self.task_queue.task_done()
                 break
-            unsuccessful_rows = self.importer.parse_and_import(rows)
+            unsuccessful_rows = self.db_client.insert_into(self.table_name, rows)
             if unsuccessful_rows:
                 self.unsuccessful_rows_queue.put(unsuccessful_rows)
             self.task_queue.task_done()

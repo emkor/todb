@@ -8,7 +8,7 @@ class DataModelParsingTest(unittest.TestCase):
     def test_should_parse_model_file(self):
         abs_csv_path = proj_path_to_abs("resources/example_model.json")
         model_columns, pkey_config, file_config = parse_model_file(abs_csv_path)
-        self.assertEqual(pkey_config, PrimaryKeyConf(PKEY_COLS, ["timestamp"]))
+        self.assertEqual(pkey_config, PrimaryKeyConf(PKEY_COLS, ["timestamp", "artist", "title"]))
         self.assertEqual(len(model_columns), 3)
         self.assertIn(ConfColumn(name="artist", col_index=0, conf_type="string",
                                  nullable=False, indexed=True, unique=False), model_columns)
