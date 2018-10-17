@@ -63,11 +63,11 @@ def main(args: argparse.Namespace) -> None:
             velocity_kBps, velocity_rows_sec = (path.getsize(args.input) / 1000) / took_seconds, csv_rows / took_seconds
             success_percentage = db_rows * 100 / csv_rows
             logger.info(
-                "Inserted {} / {} ({:3.1f}%) rows in {:2.3f}s ({:3.1f} kB/s, {:5.1f} rows/s)".format(db_rows, csv_rows,
-                                                                                                     success_percentage,
-                                                                                                     took_seconds,
-                                                                                                     velocity_kBps,
-                                                                                                     velocity_rows_sec))
+                "Inserted {} / {} ({:.1f}%) rows in {:.2f}s ({:.1f} kB/s, {:.1f} rows/s)".format(db_rows, csv_rows,
+                                                                                                   success_percentage,
+                                                                                                   took_seconds,
+                                                                                                   velocity_kBps,
+                                                                                                   velocity_rows_sec))
             exit(EXIT_CODE_OK)
         except Exception as e:
             logger.error("Error: {} ()".format(e))

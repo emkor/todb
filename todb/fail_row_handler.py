@@ -1,8 +1,10 @@
+from datetime import datetime
 from os import path
 from typing import List
 
 from todb.data_model import InputFileConfig
 from todb.logger import get_logger
+from todb.util import seconds_between
 
 
 class FailRowHandler(object):
@@ -12,16 +14,17 @@ class FailRowHandler(object):
         self.logger = get_logger()
 
     def handle_failed_rows(self, rows: List[List[str]]):
-        self.logger.info("Logging {} unsuccessfully inserted rows to file {}...".format(len(rows),
-                                                                                      path.basename(
-                                                                                          self.output_file_path)))
+        start_time = datetime.utcnow()
+        self.logger.debug("Logging {} unsuccessfully inserted rows...".format(len(rows)))
         try:
             out_bytes = self._convert_rows_to_bytes(rows)
             with open(self.output_file_path, "ab") as out_file:
                 out_file.write(out_bytes)
+            took_seconds = seconds_between(start_time)
+            self.logger.info("Logged {} unsuccessfully inserted rows in {:.2f}s".format(len(rows), took_seconds))
         except Exception as e:
-            self.logger.error("Could not handle storing rows back in file {}: {}".format(path.basename(
-                self.output_file_path), e))
+            self.logger.error("Could not handle storing rows back in file {}: {}; rows: \n{}".format(path.basename(
+                self.output_file_path), e, rows))
 
     def _convert_rows_to_bytes(self, rows: List[List[str]]) -> bytes:
         out_string = self.input_file_config.row_delimiter().join(

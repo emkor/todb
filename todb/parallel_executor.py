@@ -50,11 +50,11 @@ class ParallelExecutor(object):
                 row_counter += len(cells_in_rows)
                 self.logger.info("Parsed {} rows ({} so far)...".format(len(cells_in_rows), row_counter))
                 tasks_queue.put(cells_in_rows)
-        self.logger.debug("Waiting till values will be stored in DB...")
+        self.logger.info("Waiting till values will be stored in DB...")
         [tasks_queue.put(None) for w in parser_workers]
         tasks_queue.join()
 
-        self.logger.debug("Waiting till failed rows will be stored in file...")
+        self.logger.info("Waiting till failed rows will be stored in file...")
         unsuccessful_rows_queue.put(None)
         unsuccessful_rows_queue.join()
 
