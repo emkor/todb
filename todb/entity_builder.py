@@ -4,6 +4,7 @@ from datetime import datetime, date, time
 
 from dateutil.parser import parse
 from todb.data_model import ConfColumn
+from todb.logger import get_logger
 
 BOOLEAN_MAPPINGS = {
     "true": True,
@@ -21,18 +22,19 @@ BOOLEAN_MAPPINGS = {
 class EntityBuilder(object):
     def __init__(self, columns: List[ConfColumn]) -> None:
         self.columns = columns
+        self.logger = get_logger()
 
     def to_entity(self, cells_in_row: List[str]) -> Optional[Dict[str, Any]]:
         if len(self.columns) <= len(cells_in_row):
             try:
                 return {c.name: self._cast_value_to_sql_compatible(c, cells_in_row[c.col_index]) for c in self.columns}
             except Exception as e:
-                print("Can not build entity from row {}: {}".format(cells_in_row, e))
+                self.logger.debug("Can not build entity from row {}: {}".format(cells_in_row, e))
                 return None
         else:
-            print("Row {} has less cells ({}) then defined columns ({})".format(cells_in_row,
-                                                                                len(cells_in_row),
-                                                                                len(self.columns)))
+            self.logger.debug("Row {} has less cells ({}) then defined columns ({})".format(cells_in_row,
+                                                                                            len(cells_in_row),
+                                                                                            len(self.columns)))
             return None
 
     def _cast_value_to_sql_compatible(self, column: ConfColumn, value: Optional[str]) -> Optional[Any]:
@@ -59,7 +61,7 @@ class EntityBuilder(object):
             else:
                 return column.python_type(value)
         except Exception as e:
-            print("WARNING: Could not cast {} for column {}: {}".format(value, column, e))
+            self.logger.debug("WARNING: Could not cast {} for column {}: {}".format(value, column, e))
             if column.nullable:
                 return None
             else:

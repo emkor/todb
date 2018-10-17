@@ -3,6 +3,7 @@ from typing import List, Tuple
 
 from todb.fail_row_handler import FailRowHandler
 from todb.importer import Importer
+from todb.logger import get_logger
 from todb.params import InputParams
 from todb.data_model import ConfColumn, InputFileConfig, PrimaryKeyConf
 from todb.entity_builder import EntityBuilder
@@ -19,6 +20,7 @@ class ParallelExecutor(object):
         self.columns = columns
         self.table_name = table_name
         self.failed_rows_file = failed_rows_file
+        self.logger = get_logger()
 
     def start(self, input_file_name: str) -> Tuple[int, int]:
         db_client = SqlClient(self.params.sql_db, EntityBuilder(self.columns))
@@ -40,18 +42,19 @@ class ParallelExecutor(object):
         for w in parser_workers:
             w.start()
 
-        print("Inserting data into SQL...")
+        self.logger.debug("Inserting data into SQL...")
         parser = CsvParser(self.input_file_config, self.params.chunk_size_kB)
         row_counter = 0
         for cells_in_rows in parser.read_rows_in_chunks(input_file_name):
-            row_counter += len(cells_in_rows)
-            print("Parsed {} rows ({} so far)...".format(len(cells_in_rows), row_counter))
-            tasks_queue.put(cells_in_rows)
-        print("Waiting till values will be stored in DB...")
+            if cells_in_rows:
+                row_counter += len(cells_in_rows)
+                self.logger.info("Parsed {} rows ({} so far)...".format(len(cells_in_rows), row_counter))
+                tasks_queue.put(cells_in_rows)
+        self.logger.debug("Waiting till values will be stored in DB...")
         [tasks_queue.put(None) for w in parser_workers]
         tasks_queue.join()
 
-        print("Waiting till failed rows will be stored in file...")
+        self.logger.debug("Waiting till failed rows will be stored in file...")
         unsuccessful_rows_queue.put(None)
         unsuccessful_rows_queue.join()
 
@@ -66,13 +69,14 @@ class ParsingWorker(mp.Process):
         self.importer = importer
         self.task_queue = task_queue
         self.unsuccessful_rows_queue = unsuccessful_rows_queue
+        self.logger = get_logger()
 
     def run(self):
-        print("{} | ParsingWorker starting!".format(self.name))
+        self.logger.debug("{} | ParsingWorker starting!".format(self.name))
         while True:
             rows = self.task_queue.get()
             if rows is None:
-                print("{} | ParsingWorker exiting!".format(self.name))  # Poison pill means shutdown
+                self.logger.debug("{} | ParsingWorker exiting!".format(self.name))  # Poison pill means shutdown
                 self.task_queue.task_done()
                 break
             unsuccessful_rows = self.importer.parse_and_import(self.table_name, rows)
@@ -86,13 +90,14 @@ class UnsuccessfulRowsHandlingWorker(mp.Process):
         super(UnsuccessfulRowsHandlingWorker, self).__init__()
         self.unsuccessful_rows_queue = unsuccessful_rows_queue
         self.handler = handler
+        self.logger = get_logger()
 
     def run(self):
-        print("{} | UnsuccessfulRowsHandlingWorker starting!".format(self.name))
+        self.logger.debug("{} | UnsuccessfulRowsHandlingWorker starting!".format(self.name))
         while True:
             rows = self.unsuccessful_rows_queue.get()
             if rows is None:
-                print("{} | UnsuccessfulRowsHandlingWorker exiting!".format(self.name))  # Poison pill means shutdown
+                self.logger.debug("{} | UnsuccessfulRowsHandlingWorker exiting!".format(self.name))  # Poison pill means shutdown
                 self.unsuccessful_rows_queue.task_done()
                 break
             self.handler.handle_failed_rows(rows)

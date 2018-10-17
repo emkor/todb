@@ -7,6 +7,7 @@ from sqlalchemy.pool import NullPool
 from todb.data_model import ConfColumn, PrimaryKeyConf, PKEY_AUTOINC
 from todb.db_client import DbClient
 from todb.entity_builder import EntityBuilder
+from todb.logger import get_logger
 
 INSERT_ONE_BY_ONE_THRESHOLD = 8
 
@@ -16,12 +17,13 @@ class SqlClient(DbClient):
         self.db_url = db_url
         self.entity_builder = entity_builder
         self._db_engine = db_engine
+        self.logger = get_logger()
 
     def init_table(self, name: str, columns: List[ConfColumn], pkey: PrimaryKeyConf) -> None:
         meta = MetaData()
         table = self._get_table(name)
         if table is None:
-            print("Creating table named {}...".format(name))
+            self.logger.info("Creating table named {}...".format(name))
             table = self._sql_table_from_columns(meta, name, columns, pkey)
             meta.create_all(self._get_db_engine(), tables=[table])
 
@@ -38,7 +40,7 @@ class SqlClient(DbClient):
                 select([func.count()]).select_from(table)
             )
         except Exception as e:
-            print("Could not count: {}".format(e))
+            self.logger.error("Could not count: {}".format(e))
             count = 0
         db_connection.close()
         return count
@@ -51,7 +53,7 @@ class SqlClient(DbClient):
                 db_connection = self._insert_entities(list_of_model_dicts, table_name)
                 return True, failed_rows
             except Exception as e:
-                print("Failed to insert {} objects at once: {}".format(len(list_of_model_dicts), e))
+                self.logger.debug("Failed to insert {} objects in batch: {}".format(len(list_of_model_dicts), e))
                 if db_connection is not None and not db_connection.closed:
                     db_connection.close()
                 return False, failed_rows
@@ -96,12 +98,12 @@ class SqlClient(DbClient):
         try:
             return meta.tables[name]
         except KeyError as e:
-            print("Could not find DB table named {}: {}".format(name, e))
+            self.logger.debug("Could not find DB table named {}: {}".format(name, e))
             return None
 
     def _get_db_engine(self) -> Engine:
         if self._db_engine is None:
-            print("Connecting to DB with connection {}".format(self.db_url))
+            self.logger.debug("Connecting to DB with connection {}".format(self.db_url))
             self._db_engine = create_engine(self.db_url, echo=False, poolclass=NullPool)
         return self._db_engine
 

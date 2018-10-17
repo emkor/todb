@@ -1,12 +1,14 @@
 from typing import Iterator, List
 
 from todb.data_model import InputFileConfig
+from todb.logger import get_logger
 
 
 class CsvParser(object):
     def __init__(self, input_file_config: InputFileConfig, chunk_size_kB: int) -> None:
         self.chunk_size_kB = chunk_size_kB
         self.input_file_config = input_file_config
+        self.logger = get_logger()
 
     def read_rows_in_chunks(self, file_path: str) -> Iterator[List[List[str]]]:
         buffer_size_bytes = round(self.chunk_size_kB * 1000, ndigits=None)
@@ -27,7 +29,7 @@ class CsvParser(object):
                     cells_in_rows = [r.split(self.input_file_config.cell_delimiter()) for r in rows]
                     yield cells_in_rows
                 except Exception as e:
-                    print("Error on parsing CSV: {}".format(e))
+                    self.logger.error("Error on parsing CSV: {}".format(e))
                     cached_last_line = ""
                     yield []
             # don't forget last cached line
