@@ -1,5 +1,6 @@
 import argparse
 import traceback
+from typing import Tuple
 
 from todb.params import InputParams
 from todb.util import seconds_between
@@ -32,13 +33,13 @@ def _parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def _to_db(params: InputParams) -> None:
+def _to_db(params: InputParams) -> Tuple[int, int]:
     columns, pkey, file_config = parse_model_file(params.model_path)
     print("Parsed model columns: {}".format(columns))
 
     executor = ParallelExecutor(params, file_config, columns, pkey, params.table_name, params.fail_output_path)
     csv_rows, db_rows = executor.start(params.input_path)
-    print("Inserted {} rows out of {} available ({:3.1f}%)".format(db_rows, csv_rows, db_rows * 100 / csv_rows))
+    return csv_rows, db_rows
 
 
 def cli_main() -> None:
@@ -51,12 +52,11 @@ def main(args: argparse.Namespace) -> None:
         params = InputParams.from_args(args)
         try:
             start_time = datetime.utcnow()
-            print("Running with: {}!".format(args))
-            input_file_size = path.getsize(args.input)
-            _to_db(params)
+            csv_rows, db_rows = _to_db(params)
             took_seconds = seconds_between(start_time)
-            velocity_kBps = (input_file_size / 1000) / took_seconds
-            print("Done in {:2.3f}s ({:3.1f} kB/s)!".format(took_seconds, velocity_kBps))
+            velocity_kBps, velocity_rows_sec = (path.getsize(args.input) / 1000) / took_seconds, csv_rows / took_seconds
+            success_percentage = db_rows * 100 / csv_rows
+            print("Inserted {} / {} ({:3.1f}%) rows in {:2.3f}s ({:3.1f} kB/s, {:5.1f} rows/s)".format(db_rows, csv_rows, success_percentage, took_seconds, velocity_kBps, velocity_rows_sec))
             exit(EXIT_CODE_OK)
         except Exception as e:
             print("Error: {} ()".format(e))
