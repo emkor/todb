@@ -54,6 +54,6 @@ class SqlClientTest(unittest.TestCase):
 
     def test_should_create_table_and_insert_data(self):
         self.client.init_table(self.table_name, self.columns, self.primary_key)
-        self.client.insert_into(self.table_name, self.rows)
+        self.client.insert_in_batch(self.table_name, self.rows)
         row_count = self.client.count(self.table_name)
         self.assertEqual(row_count, len(self.rows))

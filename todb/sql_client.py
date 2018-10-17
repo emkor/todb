@@ -7,7 +7,6 @@ from sqlalchemy.pool import NullPool
 from todb.data_model import ConfColumn, PrimaryKeyConf, PKEY_AUTOINC
 from todb.db_client import DbClient
 from todb.entity_builder import EntityBuilder
-from todb.util import split_in_half
 
 INSERT_ONE_BY_ONE_THRESHOLD = 8
 
@@ -31,20 +30,6 @@ class SqlClient(DbClient):
         if the_table is not None:
             the_table.drop(bind=self._get_db_engine())
 
-    def insert_into(self, table_name: str, rows: List[List[str]]) -> List[List[str]]:
-        if len(rows) <= INSERT_ONE_BY_ONE_THRESHOLD:
-            print("Switching to one-by-one mode for {} rows".format(len(rows)))
-            return self._insert_one_by_one(table_name, rows)
-        else:
-            mass_insert_successful, failed_rows = self._insert_all(table_name, rows)
-            if mass_insert_successful:
-                return failed_rows
-            else:
-                rows_a, rows_b = split_in_half(rows)
-                failed_rows_a = self.insert_into(table_name, rows_a)
-                failed_rows_b = self.insert_into(table_name, rows_b)
-                return failed_rows_a + failed_rows_b
-
     def count(self, table_name: str) -> int:
         db_connection = self._get_db_engine().connect()
         try:
@@ -58,7 +43,7 @@ class SqlClient(DbClient):
         db_connection.close()
         return count
 
-    def _insert_all(self, table_name: str, rows: List[List[str]]) -> Tuple[bool, List[List[str]]]:
+    def insert_in_batch(self, table_name: str, rows: List[List[str]]) -> Tuple[bool, List[List[str]]]:
         list_of_model_dicts, failed_rows = self._build_entities_from_rows(rows)
         if list_of_model_dicts:
             db_connection = None
@@ -73,7 +58,7 @@ class SqlClient(DbClient):
         else:
             return True, failed_rows
 
-    def _insert_one_by_one(self, table_name: str, rows: List[List[str]]) -> List[List[str]]:
+    def insert_one_by_one(self, table_name: str, rows: List[List[str]]) -> List[List[str]]:
         all_failed_rows = []
         for row in rows:
             list_of_entities, failed_rows = self._build_entities_from_rows([row])

@@ -1,8 +1,8 @@
 import multiprocessing as mp
-from typing import List, Tuple, Optional
+from typing import List, Tuple
 
-from todb.db_client import DbClient
 from todb.fail_row_handler import FailRowHandler
+from todb.importer import Importer
 from todb.params import InputParams
 from todb.data_model import ConfColumn, InputFileConfig, PrimaryKeyConf
 from todb.entity_builder import EntityBuilder
@@ -33,7 +33,7 @@ class ParallelExecutor(object):
         tasks_queue = mp.JoinableQueue(maxsize=2 * self.params.processes)  # type: ignore
         parser_workers = [
             ParsingWorker(tasks_queue, unsuccessful_rows_queue,
-                          SqlClient(self.params.sql_db, EntityBuilder(self.columns)),
+                          Importer(SqlClient(self.params.sql_db, EntityBuilder(self.columns))),
                           self.table_name)
             for _ in range(self.params.processes)
         ]
@@ -60,10 +60,10 @@ class ParallelExecutor(object):
 
 class ParsingWorker(mp.Process):
     def __init__(self, task_queue: mp.Queue, unsuccessful_rows_queue: mp.Queue,
-                 db_client: DbClient, table_name: str) -> None:
+                 importer: Importer, table_name: str) -> None:
         super(ParsingWorker, self).__init__()
         self.table_name = table_name
-        self.db_client = db_client
+        self.importer = importer
         self.task_queue = task_queue
         self.unsuccessful_rows_queue = unsuccessful_rows_queue
 
@@ -75,7 +75,7 @@ class ParsingWorker(mp.Process):
                 print("{} | ParsingWorker exiting!".format(self.name))  # Poison pill means shutdown
                 self.task_queue.task_done()
                 break
-            unsuccessful_rows = self.db_client.insert_into(self.table_name, rows)
+            unsuccessful_rows = self.importer.parse_and_import(self.table_name, rows)
             if unsuccessful_rows:
                 self.unsuccessful_rows_queue.put(unsuccessful_rows)
             self.task_queue.task_done()
