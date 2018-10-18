@@ -32,6 +32,7 @@ def _parse_args() -> argparse.Namespace:
                         help='Number of processes used to parse rows and insert data into DB; default: 2')
     parser.add_argument('--chunk', type=int,
                         help='Size (in kB) of chunk of data that is read from input file and inserted into DB in batched SQL statement; default: 16')
+    parser.add_argument('--logfile', type=str, default=None, help='File for todb logs')
     parser.add_argument('--debug', action='store_true', help='Increases logging verbosity')
     return parser.parse_args()
 
@@ -52,7 +53,7 @@ def cli_main() -> None:
 
 
 def main(args: argparse.Namespace) -> None:
-    setup_logger(level=logging.DEBUG if args.debug else logging.INFO)
+    setup_logger(level=logging.DEBUG if args.debug else logging.INFO, log_file=args.logfile)
     logger = get_logger()
     try:
         params = InputParams.from_args(args)
@@ -64,10 +65,10 @@ def main(args: argparse.Namespace) -> None:
             success_percentage = db_rows * 100 / csv_rows
             logger.info(
                 "Inserted {} / {} ({:.1f}%) rows in {:.2f}s ({:.1f} kB/s, {:.1f} rows/s)".format(db_rows, csv_rows,
-                                                                                                   success_percentage,
-                                                                                                   took_seconds,
-                                                                                                   velocity_kBps,
-                                                                                                   velocity_rows_sec))
+                                                                                                 success_percentage,
+                                                                                                 took_seconds,
+                                                                                                 velocity_kBps,
+                                                                                                 velocity_rows_sec))
             exit(EXIT_CODE_OK)
         except Exception as e:
             logger.error("Error: {} ()".format(e))

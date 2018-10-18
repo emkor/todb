@@ -19,7 +19,7 @@ class Importer(object):
         if len(rows) <= INSERT_ONE_BY_ONE_THRESHOLD:
             failed_rows = self.db_client.insert_one_by_one(table_name, rows)
             took_seconds = seconds_between(start_time)
-            self.logger.info(
+            self.logger.debug(
                 "Inserted {} / {} rows (one-by-one) in {:.2f}s".format(len(rows) - len(failed_rows),
                                                                        len(rows), took_seconds))
             return failed_rows
@@ -27,7 +27,7 @@ class Importer(object):
             mass_insert_successful, failed_rows = self.db_client.insert_in_batch(table_name, rows)
             if mass_insert_successful:
                 took_seconds = seconds_between(start_time)
-                self.logger.info("Inserted {} / {} rows (batch) in {:.2f}s".format(len(rows) - len(failed_rows),
+                self.logger.debug("Inserted {} / {} rows (batch) in {:.2f}s".format(len(rows) - len(failed_rows),
                                                                                    len(rows), took_seconds))
                 return failed_rows
             else:
