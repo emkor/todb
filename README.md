@@ -10,12 +10,13 @@ Simple tool for importing (even big) CSV/TSV data into SQL databases, focused on
     - tested with PostgreSQL and SQLite
 - features:
     - parametrized CSV/TSV model
-    - automatic date and time format recognition (using `python-dateutil`)
+    - automatic date/time format recognition (using `python-dateutil`)
     - uses `multiprocessing` and Python generators to stream data into DB efficiently
+    - supports SSL connection using CA certificate file
 - performance (time taken / input file size):
-    - on quad-core CPU laptop, SSD:
-        - local PostgreSQL, 3 columns of data in 8 MB file: `800-950 kB/s`
-        - local PostgreSQL, 9 columns of data in ~120MB file with 256 kB of chunk size: `5200-5900 kB/s`
+    - as a client: quad-core CPU laptop with SSD:
+        - PostgreSQL@localhost , 9 columns of data in ~120MB file with 256 kB of chunk size: `5200-5900 kB/s`
+        - PostgreSQL@LAN, 9 columns of data in ~120MB file with 256 kB of chunk size: `~1000 kB/s`
 
 ## Usage
 - describe your target SQL table in JSON file (example: `resources/example_model.json` which maps `resources/example_input.csv`)
