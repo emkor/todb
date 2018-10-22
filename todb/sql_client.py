@@ -13,8 +13,10 @@ INSERT_ONE_BY_ONE_THRESHOLD = 8
 
 
 class SqlClient(DbClient):
-    def __init__(self, db_url: str, entity_builder: EntityBuilder, db_engine: Optional[Engine] = None) -> None:
+    def __init__(self, db_url: str, entity_builder: EntityBuilder, db_engine: Optional[Engine] = None,
+                 ca_file: Optional[str] = None) -> None:
         self.db_url = db_url
+        self.ca_file = ca_file
         self.entity_builder = entity_builder
         self._db_engine = db_engine
         self.logger = get_logger()
@@ -104,7 +106,11 @@ class SqlClient(DbClient):
     def _get_db_engine(self) -> Engine:
         if self._db_engine is None:
             self.logger.debug("Connecting to DB with connection {}".format(self.db_url))
-            self._db_engine = create_engine(self.db_url, echo=False, poolclass=NullPool)
+            if self.ca_file is not None:
+                ssl_args = {'ssl': {'cert': self.ca_file}}
+                self._db_engine = create_engine(self.db_url, echo=False, poolclass=NullPool, connect_args=ssl_args)
+            else:
+                self._db_engine = create_engine(self.db_url, echo=False, poolclass=NullPool)
         return self._db_engine
 
     def _sql_table_from_columns(self, sql_metadata: MetaData, table_name: str, columns: List[ConfColumn],

@@ -20,15 +20,17 @@ class InputParams(Model):
     def from_args(cls, args: Namespace):
         return InputParams(model_path=args.model, input_path=args.input, fail_output_path=args.failures,
                            sql_db=args.sql_db, cass_db=None, table_name=args.table, processes=args.proc,
-                           chunk_size_kB=args.chunk)
+                           chunk_size_kB=args.chunk, ca_file=args.ca)
 
     def __init__(self, model_path: str, input_path: str, fail_output_path: Optional[str],
                  sql_db: str, cass_db: Optional[str], table_name: Optional[str] = None,
-                 processes: Optional[int] = None, chunk_size_kB: Optional[int] = None) -> None:
+                 processes: Optional[int] = None, chunk_size_kB: Optional[int] = None,
+                 ca_file: Optional[str] = None) -> None:
         self.model_path = model_path
         self.input_path = input_path
         self.sql_db = sql_db
         self.cass_db = cass_db
+        self.ca_file = ca_file
         self.fail_output_path = fail_output_path or self._generate_fail_file_name(self.input_path)
         self.table_name = table_name or self._generate_table_name(datetime.utcnow())
         self.chunk_size_kB = limit_or_default(value=chunk_size_kB, default=DEFAULT_CHUNK_SIZE_kB,
@@ -46,6 +48,8 @@ class InputParams(Model):
         self._validate_path_exists(self.model_path, "Model file path of {} is invalid")
         if not self.sql_db and not self.cass_db:
             raise ValueError("Did not provide any DB credentials!")
+        if self.ca_file is not None and not path.exists(self.ca_file):
+            raise ValueError("CA file {} does not exist!".format(self.ca_file))
 
     def _validate_path_exists(self, the_path: str, err_msg_fmt: str) -> None:
         if the_path is None or not path.exists(path.abspath(the_path)):
