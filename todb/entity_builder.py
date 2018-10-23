@@ -27,7 +27,8 @@ class EntityBuilder(object):
     def to_entity(self, cells_in_row: List[str]) -> Optional[Dict[str, Any]]:
         if len(self.columns) <= len(cells_in_row):
             try:
-                return {c.name: self._cast_value_to_sql_compatible(c, cells_in_row[c.col_index]) for c in self.columns}
+                return {c.name: self._cast_value_to_sql_compatible(c, cells_in_row[c.col_index] if c.col_index is not None else None)
+                        for c in self.columns}
             except Exception as e:
                 self.logger.debug("Can not build entity from row {}: {}".format(cells_in_row, e))
                 return None
