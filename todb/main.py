@@ -29,9 +29,9 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument('--table', type=str,
                         help='Table name to insert data to; by default, table name will be generated from input file name and current time')
     parser.add_argument('--proc', type=int,
-                        help='Number of processes used to parse rows and insert data into DB; default: 2')
+                        help='Number of processes used to parse rows and insert data into DB; default: number of CPUs on client machine')
     parser.add_argument('--chunk', type=int,
-                        help='Size (in kB) of chunk of data that is read from input file and inserted into DB in batched SQL statement; default: 16')
+                        help='Size (in kB) of chunk of data that is read from input file and inserted into DB in batched SQL statement; default: 512')
     parser.add_argument('--ca', type=str, help='Path to certificate file for given DB server')
     parser.add_argument('--logfile', type=str, default=None, help='File for todb logs')
     parser.add_argument('--debug', action='store_true', help='Increases logging verbosity')

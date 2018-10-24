@@ -1,3 +1,4 @@
+import multiprocessing
 from argparse import Namespace
 from datetime import datetime
 from os import path
@@ -6,12 +7,12 @@ from typing import Optional
 from todb.abstract import Model
 from todb.util import limit_or_default
 
-DEFAULT_CHUNK_SIZE_kB = 16
+DEFAULT_CHUNK_SIZE_kB = 512
 MIN_CHUNK_SIZE_kB = 1
 MAX_CHUNK_SIZE_kB = 64000
 
 MIN_PROCESSES = 1
-DEFAULT_PROCESSES = 2
+DEFAULT_PROCESSES = multiprocessing.cpu_count()
 MAX_PROCESSES = 128
 
 
