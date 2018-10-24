@@ -17,6 +17,12 @@ Simple tool for importing (even big) CSV/TSV data into SQL databases, focused on
     - as a client: quad-core CPU laptop with SSD:
         - PostgreSQL@localhost , 9 columns of data in ~120MB file with 256 kB of chunk size: `5200-5900 kB/s`
         - PostgreSQL@LAN, 9 columns of data in ~120MB file with 256 kB of chunk size: `~1000 kB/s`
+    - comparison to `pandas` `read_csv` and `to_sql` using same DB on same client hardware and same file (120MB):
+        - `pandas` with specified `dtype` and `parse_dates=[0]`: `~25.271 seconds` (median)
+        - `todb` with chunk size of `128 kB`: `27.07 seconds` (median)
+        - `todb` with chunk size of `512 kB`: `19.35 seconds` (median)
+        - `todb` with chunk size of `2048 kB`: `17.50 seconds` (median)
+        
 
 ## Usage
 - describe your target SQL table in JSON file (example: `resources/example_model.json` which maps `resources/example_input.csv`)
