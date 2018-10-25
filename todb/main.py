@@ -50,19 +50,19 @@ def _to_db(params: InputParams) -> Tuple[int, int]:
 
 def cli_main() -> None:
     args = _parse_args()
-    main(args)
-
-
-def main(args: argparse.Namespace) -> None:
     setup_logger(level=logging.DEBUG if args.debug else logging.INFO, log_file=args.logfile)
+    params = InputParams.from_args(args)
+    main(params)
+
+
+def main(params: InputParams) -> None:
     logger = get_logger()
     try:
-        params = InputParams.from_args(args)
         try:
             start_time = datetime.utcnow()
             csv_rows, db_rows = _to_db(params)
             took_seconds = seconds_between(start_time)
-            velocity_kBps, velocity_rows_sec = (path.getsize(args.input) / 1000) / took_seconds, csv_rows / took_seconds
+            velocity_kBps, velocity_rows_sec = (path.getsize(params.input_path) / 1000) / took_seconds, csv_rows / took_seconds
             success_percentage = db_rows * 100 / csv_rows
             logger.info(
                 "Inserted {} / {} ({:.1f}%) rows in {:.2f}s ({:.1f} kB/s, {:.1f} rows/s)".format(db_rows, csv_rows,
