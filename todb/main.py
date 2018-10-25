@@ -62,7 +62,8 @@ def main(params: InputParams) -> None:
             start_time = datetime.utcnow()
             csv_rows, db_rows = _to_db(params)
             took_seconds = seconds_between(start_time)
-            velocity_kBps, velocity_rows_sec = (path.getsize(params.input_path) / 1000) / took_seconds, csv_rows / took_seconds
+            velocity_kBps, velocity_rows_sec = (path.getsize(
+                params.input_path) / 1000) / took_seconds, csv_rows / took_seconds
             success_percentage = db_rows * 100 / csv_rows
             logger.info(
                 "Inserted {} / {} ({:.1f}%) rows in {:.2f}s ({:.1f} kB/s, {:.1f} rows/s)".format(db_rows, csv_rows,
@@ -76,7 +77,7 @@ def main(params: InputParams) -> None:
             traceback.print_exc()
             exit(EXIT_CODE_FAILURE)
     except Exception as e:
-        logger.error("Provided arguments were not correct: {} (args: {})".format(e, args))
+        logger.error("Provided arguments were not correct: {} (args: {})".format(e, params))
         exit(EXIT_CODE_USER_ERROR)
 
 
