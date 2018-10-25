@@ -1,5 +1,46 @@
 # todb (work in progress) [![Build Status](https://travis-ci.com/emkor/todb.svg?branch=master)](https://travis-ci.com/emkor/todb)
-Simple tool for importing (even big) CSV/TSV data into SQL databases, focused on automatic format inference and performance
+Simple tool for importing large CSV/TSV data into SQL databases, focused on performance
+
+## Quick example
+- command: `todb csv_model.json file.csv postgresql://user:password@localhost:5432/dbname`
+- `file.csv` example rows:
+    - `timestamp;parameter;value`
+    - `30 Aug 2018 11:01;cpu_usage_perc;0.05`
+    - `30 Aug 2018 11:01;mem_usage_perc;0.21`
+- `csv_model.json` example model file:
+    - ```{
+           "file": {
+             "encoding": "utf-8",
+             "has_header": true,
+             "row_delimiter": "\n",
+             "cell_delimiter": ";"
+           },
+           "columns": {
+             "Timestamp": {
+               "input_file_column": 0,
+               "type": "datetime",
+               "nullable": false,
+               "index": true,
+               "unique": false
+             },
+             "Parameter": {
+               "input_file_column": 1,
+               "type": "string",
+               "nullable": false,
+               "index": true,
+               "unique": false
+             },
+             "Value": {
+               "input_file_column": 3,
+               "type": "float",
+               "nullable": true,
+               "index": false,
+               "unique": false
+             }
+           },
+           "primary_key": ["Timestamp", "Parameter"]
+         }
+        ```
 
 ## Current status
 - supported file formats:
@@ -14,16 +55,13 @@ Simple tool for importing (even big) CSV/TSV data into SQL databases, focused on
     - uses `multiprocessing` and Python generators to stream data into DB efficiently
     - supports SSL connection using CA certificate file
 - performance (time taken / input file size):
-    - as a client: quad-core CPU laptop with SSD:
-        - PostgreSQL@localhost , 9 columns of data in ~120MB file with 256 kB of chunk size: `5200-5900 kB/s`
-        - PostgreSQL@LAN, 9 columns of data in ~120MB file with 256 kB of chunk size: `~1000 kB/s`
-    - comparison to `pandas` `read_csv` and `to_sql` using same DB on same client hardware and same file (120MB):
-        - `pandas` with specified `dtype` and pointed dates to parse (`parse_dates`): `~25.271` seconds (median)
-        - `todb` with chunk size of:
-            - `32 kB`: `42.70` seconds (median)
-            - `128 kB`: `23.04` seconds (median)
-            - `512 kB`: `17.50` seconds (median)
-            - `2048 kB`: `16.53` seconds (median)
+    - quad-core CPU laptop with SSD as a client, PostgreSQL@docker@localhost as a server, 120MB CSV file (9 columns, one of them being datetime); median times:
+        -`pandas`: `read_csv` and `to_sql` methods with specified `dtype`: `~25.271s` (`4.74 MB/s`)
+        - `todb`: with chunk size of:
+            - `32 kB`: `42.70s` (`2.81 MB/s`)
+            - `128 kB`: `23.04s` (`5.21 MB/s`)
+            - `512 kB`: `17.50s` (`6.85 MB/s`)
+            - `2048 kB`: `16.53s` (`7.26 MB/s`)
 
 ## Usage
 - describe your target SQL table in JSON file (example: `resources/example_model.json` which maps `resources/example_input.csv`)
