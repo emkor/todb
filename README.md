@@ -61,7 +61,7 @@ timestamp;parameter;value
             - `128  kB`: `23.04s` (`5.21 MB/s`)
             - `512  kB`: `17.50s` (`6.85 MB/s`)
             - `2048 kB`: `16.53s` (`7.26 MB/s`)
-        -`pandas`: `read_csv` and `to_sql` methods with specified `dtype`: `~25.271s` (`4.74 MB/s`)
+        - `pandas`: `read_csv` and `to_sql` methods with specified `dtype`: `~25.271s` (`4.74 MB/s`)
     
 ## JSON model file structure
 Model file describes your CSV/TSV file structure; consists of three sections:
