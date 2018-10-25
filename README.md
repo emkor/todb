@@ -46,26 +46,22 @@ timestamp;parameter;value
     "primary_key": ["Timestamp", "Parameter"]
 }
 ```
-- `postgresql://user:password@localhost:5432/dbname` is an example of sqlalchemy [database URL](https://docs.sqlalchemy.org/en/latest/core/engines.html#database-urls);
-- try `todb -h` for detailed options
+- `postgresql://user:password@localhost:5432/dbname` is an example of sqlalchemy [database URL](https://docs.sqlalchemy.org/en/latest/core/engines.html#database-urls)
+- try `todb -h` for optional parameters description
 
 ## Features
 - supports flat-structure files (CSVs, TSVs etc.)
-- supports any SQL database that sqlalchemy can use ()tested with PostgreSQL and SQLite)
-- automatically recognizes date/time format (using `python-dateutil`)
+- supports any SQL database that sqlalchemy can use (tested with PostgreSQL and SQLite)
+- automatically recognizes date/time format, including intervals (using `python-dateutil`)
 - supports SSL connection using CA certificate file
-- performance (time taken / input file size):
-    - quad-core CPU laptop with SSD as a client, PostgreSQL@localhost, 120MB CSV file (9 columns, one of them being datetime); median import time:
-        -`pandas`: `read_csv` and `to_sql` methods with specified `dtype`: `~25.271s` (`4.74 MB/s`)
+- performance (time taken; median import time):
+    - quad-core CPU laptop with SSD as a client, PostgreSQL@localhost, 120MB CSV file (9 columns, one of them being datetime):
         - `todb`: with chunk size of:
-            - `32 kB`: `42.70s` (`2.81 MB/s`)
-            - `128 kB`: `23.04s` (`5.21 MB/s`)
-            - `512 kB`: `17.50s` (`6.85 MB/s`)
+            - `32   kB`: `42.70s` (`2.81 MB/s`)
+            - `128  kB`: `23.04s` (`5.21 MB/s`)
+            - `512  kB`: `17.50s` (`6.85 MB/s`)
             - `2048 kB`: `16.53s` (`7.26 MB/s`)
-
-## Usage
-- describe your target SQL table in JSON file (example: `resources/example_model.json` which maps `resources/example_input.csv`)
-- run: `todb <path to input_file.csv> <path to model.json> <sqlalchemy formatted SQL DB URL>`
+        -`pandas`: `read_csv` and `to_sql` methods with specified `dtype`: `~25.271s` (`4.74 MB/s`)
     
 ## JSON model file structure
 Model file describes your CSV/TSV file structure; consists of three sections:
