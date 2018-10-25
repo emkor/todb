@@ -28,10 +28,13 @@ class Importer(object):
             if mass_insert_successful:
                 took_seconds = seconds_between(start_time)
                 self.logger.debug("Inserted {} / {} rows (batch) in {:.2f}s".format(len(rows) - len(failed_rows),
-                                                                                   len(rows), took_seconds))
+                                                                                    len(rows), took_seconds))
                 return failed_rows
             else:
                 rows_a, rows_b = split_in_half(rows)
                 failed_rows_a = self.parse_and_import(table_name, rows_a)
                 failed_rows_b = self.parse_and_import(table_name, rows_b)
                 return failed_rows_a + failed_rows_b
+
+    def close(self) -> None:
+        self.db_client.close()

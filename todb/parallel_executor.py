@@ -78,6 +78,7 @@ class ParsingWorker(mp.Process):
             if rows is None:
                 self.logger.debug("{} | ParsingWorker exiting!".format(self.name))  # Poison pill means shutdown
                 self.task_queue.task_done()
+                self.importer.close()
                 break
             unsuccessful_rows = self.importer.parse_and_import(self.table_name, rows)
             if unsuccessful_rows:
@@ -97,7 +98,8 @@ class UnsuccessfulRowsHandlingWorker(mp.Process):
         while True:
             rows = self.unsuccessful_rows_queue.get()
             if rows is None:
-                self.logger.debug("{} | UnsuccessfulRowsHandlingWorker exiting!".format(self.name))  # Poison pill means shutdown
+                self.logger.debug(
+                    "{} | UnsuccessfulRowsHandlingWorker exiting!".format(self.name))  # Poison pill means shutdown
                 self.unsuccessful_rows_queue.task_done()
                 break
             self.handler.handle_failed_rows(rows)

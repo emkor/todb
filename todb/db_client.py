@@ -20,3 +20,6 @@ class DbClient(object):
 
     def count(self, table_name: str) -> int:
         raise NotImplementedError(ERROR_MSG)
+
+    def close(self) -> None:
+        raise NotImplementedError(ERROR_MSG)

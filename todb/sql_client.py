@@ -20,6 +20,7 @@ class SqlClient(DbClient):
         self.entity_builder = entity_builder
         self._db_engine = db_engine
         self.logger = get_logger()
+        self._conn = None  # type: Optional[Connection]
 
     def init_table(self, name: str, columns: List[ConfColumn], pkey: PrimaryKeyConf) -> None:
         meta = MetaData()
@@ -35,29 +36,24 @@ class SqlClient(DbClient):
             the_table.drop(bind=self._get_db_engine())
 
     def count(self, table_name: str) -> int:
-        db_connection = self._get_db_engine().connect()
         try:
             table = self._get_table(table_name)
-            count = db_connection.scalar(
+            count = self._get_connection().scalar(
                 select([func.count()]).select_from(table)
             )
         except Exception as e:
             self.logger.error("Could not count: {}".format(e))
             count = 0
-        db_connection.close()
         return count
 
     def insert_in_batch(self, table_name: str, rows: List[List[str]]) -> Tuple[bool, List[List[str]]]:
         list_of_model_dicts, failed_rows = self._build_entities_from_rows(rows)
         if list_of_model_dicts:
-            db_connection = None
             try:
-                db_connection = self._insert_entities(list_of_model_dicts, table_name)
+                self._insert_entities(list_of_model_dicts, table_name)
                 return True, failed_rows
             except Exception as e:
                 self.logger.debug("Failed to insert {} objects in batch: {}".format(len(list_of_model_dicts), e))
-                if db_connection is not None and not db_connection.closed:
-                    db_connection.close()
                 return False, failed_rows
         else:
             return True, failed_rows
@@ -74,6 +70,10 @@ class SqlClient(DbClient):
                     all_failed_rows.append(row)
         return all_failed_rows
 
+    def close(self) -> None:
+        if self._conn is not None and not self._conn.closed:
+            self._conn.close()
+
     def _build_entities_from_rows(self, rows: List[List[str]]) -> Tuple[List[Dict[str, Any]], List[List[str]]]:
         list_of_model_dicts = []
         failed_rows = []
@@ -86,12 +86,11 @@ class SqlClient(DbClient):
         return list_of_model_dicts, failed_rows
 
     def _insert_entities(self, list_of_model_dicts: List[Dict[str, Any]], table_name: str) -> Connection:
-        db_connection = self._get_db_engine().connect()
+        db_connection = self._get_connection()
         table = self._get_table(table_name)
         if table is None:
             raise Exception("There's not table named {} in {}".format(table_name, self.db_url))
         db_connection.execute(table.insert(), list_of_model_dicts)
-        db_connection.close()
         return db_connection
 
     def _get_table(self, name: str) -> Optional[Table]:
@@ -102,6 +101,11 @@ class SqlClient(DbClient):
         except KeyError as e:
             self.logger.debug("Could not find DB table named {}: {}".format(name, e))
             return None
+
+    def _get_connection(self) -> Connection:
+        if self._conn is None or self._conn.closed:
+            self._conn = self._get_db_engine().connect()
+        return self._conn
 
     def _get_db_engine(self) -> Engine:
         if self._db_engine is None:
