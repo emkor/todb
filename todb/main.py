@@ -20,8 +20,8 @@ EXIT_CODE_FAILURE = 2
 
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description='Import CSV/TSV files into any SQL DB system')
-    parser.add_argument('model', type=str, help='JSON file containing CSV data model')
     parser.add_argument('input', type=str, help='CSV/TSV file to import into DB')
+    parser.add_argument('model', type=str, help='JSON file containing CSV data model')
     parser.add_argument('sql_db', type=str,
                         help='A sqlalchemy-compatible database URL; see https://docs.sqlalchemy.org/en/latest/core/engines.html#database-urls')
     parser.add_argument('--failures', type=str,
@@ -33,7 +33,7 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument('--chunk', type=int,
                         help='Size (in kB) of chunk of data that is read from input file and inserted into DB in batched SQL statement; default: 512')
     parser.add_argument('--ca', type=str, help='Path to certificate file for given DB server')
-    parser.add_argument('--logfile', type=str, default=None, help='File for todb logs')
+    parser.add_argument('--logfile', type=str, default=None, help='File to which todb')
     parser.add_argument('--debug', action='store_true', help='Increases logging verbosity')
     return parser.parse_args()
 

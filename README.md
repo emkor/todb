@@ -1,15 +1,17 @@
 # todb (work in progress) [![Build Status](https://travis-ci.com/emkor/todb.svg?branch=master)](https://travis-ci.com/emkor/todb)
-Simple tool for importing large CSV/TSV data into SQL databases, focused on performance
+Simple tool for importing large CSV/TSV-file data into SQL databases, focused on performance
 
 ## Quick example
 `todb model.json file.csv postgresql://user:password@localhost:5432/dbname` where:
-- `file.csv` example rows:
+- `file.csv` has rows:
 ```csv
 timestamp;parameter;value
 30 Aug 2018 11:01;cpu_usage_perc;0.05
 30 Aug 2018 11:01;mem_usage_perc;0.21
+30 Aug 2018 11:06;cpu_usage_perc;0.05
+30 Aug 2018 11:06;mem_usage_perc;0.21
 ```
-- `model.json` example model file:
+- `model.json` describes file and target table:
 ```json
 {
     "file": {
@@ -44,19 +46,14 @@ timestamp;parameter;value
     "primary_key": ["Timestamp", "Parameter"]
 }
 ```
-- `postgresql://user:password@localhost:5432/dbname` is an example of sqlalchemy-compatible database URL;
+- `postgresql://user:password@localhost:5432/dbname` is an example of sqlalchemy [database URL](https://docs.sqlalchemy.org/en/latest/core/engines.html#database-urls);
+- try `todb -h` for detailed options
 
-## Current status
-- supported file formats:
-    - flat-structure (CSVs, TSVs etc.)  files of any encoding (`todb` reads in binary)
-- supported databases:
-    - theoretically, anything sqlalchemy can use
-    - tested with PostgreSQL and SQLite
-- features:
-    - parametrized CSV/TSV model
-    - automatic date/time format recognition (using `python-dateutil`)
-    - uses `multiprocessing` and Python generators to stream data into DB efficiently
-    - supports SSL connection using CA certificate file
+## Features
+- supports flat-structure files (CSVs, TSVs etc.)
+- supports any SQL database that sqlalchemy can use ()tested with PostgreSQL and SQLite)
+- automatically recognizes date/time format (using `python-dateutil`)
+- supports SSL connection using CA certificate file
 - performance (time taken / input file size):
     - quad-core CPU laptop with SSD as a client, PostgreSQL@localhost, 120MB CSV file (9 columns, one of them being datetime); median import time:
         -`pandas`: `read_csv` and `to_sql` methods with specified `dtype`: `~25.271s` (`4.74 MB/s`)
@@ -68,15 +65,7 @@ timestamp;parameter;value
 
 ## Usage
 - describe your target SQL table in JSON file (example: `resources/example_model.json` which maps `resources/example_input.csv`)
-- run: `todb <path to model.json> <path to input_file.csv> <sqlalchemy formatted SQL DB URL>`
-- try `todb -h` for detailed options
-
-## Full example
-- `todb example_model.json example_input.csv postgresql://user:secret@localhost:5432/default --table example.csv --failures failures.csv --proc 4 --chunk 128`
-    - this will import `example_input.csv` file using mapping from `example_model.json`
-    - into table named `example.csv` on localhost-run PostgreSQL
-    - while logging incorrect rows in file `failures.csv`
-    - using 4 CPU cores and importing file into batches of size roughly `128 kB`
+- run: `todb <path to input_file.csv> <path to model.json> <sqlalchemy formatted SQL DB URL>`
     
 ## JSON model file structure
 Model file describes your CSV/TSV file structure; consists of three sections:
