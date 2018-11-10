@@ -17,7 +17,7 @@ setup(
     author="Mateusz Korzeniowski",
     author_email="emkor93@gmail.com",
     url="https://github.com/emkor/todb",
-    packages=find_packages(),
+    packages=find_packages(exclude=("test", "test.*")),
     install_requires=REQUIREMENTS,
     entry_points={
         'console_scripts': [
