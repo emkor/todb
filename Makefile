@@ -12,6 +12,7 @@ config:
 	@echo "---- Installing dependencies and app itself in editable mode ----"
 	@$(VENV_PY3) -m pip install --upgrade pip
 	@$(VENV_PY3) -m pip install wheel
+	@$(VENV_PY3) -m pip install -r requirements-dev.txt
 	@$(VENV_PY3) -m pip install -e .
 
 test:
