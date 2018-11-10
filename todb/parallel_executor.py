@@ -10,6 +10,9 @@ from todb.entity_builder import EntityBuilder
 from todb.parsing import CsvParser
 from todb.sql_client import SqlClient
 
+POISON_PILL = None
+QUEUE_SIZE_PER_PROCESS = 2
+
 
 class ParallelExecutor(object):
     def __init__(self, params: InputParams, input_file_config: InputFileConfig, columns: List[ConfColumn],
@@ -27,12 +30,13 @@ class ParallelExecutor(object):
         db_client.init_table(self.table_name, self.columns, self.pkey)
         initial_row_count = db_client.count(self.table_name)
 
-        unsuccessful_rows_queue = mp.JoinableQueue(maxsize=2 * self.params.processes)  # type: ignore
+        unsuccessful_rows_queue = mp.JoinableQueue(
+            maxsize=QUEUE_SIZE_PER_PROCESS * self.params.processes)  # type: ignore
         fail_row_handler = FailRowHandler(self.input_file_config, self.failed_rows_file)
         failure_handling_worker = UnsuccessfulRowsHandlingWorker(unsuccessful_rows_queue, fail_row_handler)
         failure_handling_worker.start()
 
-        tasks_queue = mp.JoinableQueue(maxsize=2 * self.params.processes)  # type: ignore
+        tasks_queue = mp.JoinableQueue(maxsize=QUEUE_SIZE_PER_PROCESS * self.params.processes)  # type: ignore
         parser_workers = [
             ParsingWorker(tasks_queue, unsuccessful_rows_queue,
                           Importer(SqlClient(self.params.sql_db, EntityBuilder(self.columns))),
@@ -51,11 +55,11 @@ class ParallelExecutor(object):
                 self.logger.info("Parsed {} rows ({} so far)...".format(len(cells_in_rows), row_counter))
                 tasks_queue.put(cells_in_rows)
         self.logger.info("Waiting till values will be stored in DB...")
-        [tasks_queue.put(None) for w in parser_workers]
+        [tasks_queue.put(POISON_PILL) for _ in parser_workers]
         tasks_queue.join()
 
         self.logger.info("Waiting till failed rows will be stored in file...")
-        unsuccessful_rows_queue.put(None)
+        unsuccessful_rows_queue.put(POISON_PILL)
         unsuccessful_rows_queue.join()
 
         return row_counter, db_client.count(self.table_name) - initial_row_count
