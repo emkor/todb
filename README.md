@@ -36,7 +36,7 @@ timestamp;parameter;value
             "unique": false
         },
         "Value": {
-            "input_file_column": 3,
+            "input_file_column": 2,
             "type": "float",
             "nullable": true,
             "index": false,
@@ -51,17 +51,16 @@ timestamp;parameter;value
 
 ## Features
 - supports flat-structure files (CSVs, TSVs etc.)
-- supports any SQL database that sqlalchemy can use (tested with PostgreSQL and SQLite)
-- automatically recognizes date/time format, including intervals (using `python-dateutil`)
+- supports any `sqlalchemy`-compatible database (tested with PostgreSQL and SQLite)
+- automatically recognizes date/time format (using `python-dateutil`)
 - supports SSL connection using CA certificate file
 - performance (time taken; median import time):
     - quad-core CPU laptop with SSD as a client, PostgreSQL@localhost, 120MB CSV file (9 columns, one of them being datetime):
+        - `pandas`: `read_csv` and `to_sql` methods with `dtype` specified: `~25.271s` (`4.74 MB/s`)
         - `todb`: with chunk size of:
-            - `32   kB`: `42.70s` (`2.81 MB/s`)
             - `128  kB`: `23.04s` (`5.21 MB/s`)
             - `512  kB`: `17.50s` (`6.85 MB/s`)
             - `2048 kB`: `16.53s` (`7.26 MB/s`)
-        - `pandas`: `read_csv` and `to_sql` methods with specified `dtype`: `~25.271s` (`4.74 MB/s`)
     
 ## JSON model file structure
 Model file describes your CSV/TSV file structure; consists of three sections:
@@ -75,6 +74,6 @@ Model file describes your CSV/TSV file structure; consists of three sections:
     - `type` is one of currently supported types: `bool`, `string`, `int`, `bigint`, `float`, `datetime`, `date`, `time`
     - `unique`, `index` and `nullable` boolean-flags are self-explanatory
 - `primary_key`
-    - in case of string value of `autoincrement`, SQL table will have additional `ID` column as a primary key of type `Integer` and with `auto-increment` on
-    - in case of other string value, it's treated as existing column name defined under `columns`, and this column will become primary key of a table
+    - in case of string value of `autoincrement`, SQL table will have additional `ID` column as a primary key of type `Integer` and with `auto-increment` enabled
+    - in case of any other string value, it's interpreted as column name defined under `columns`; this column becomes primary key of a table
     - in case of array of strings value, primary key will be clustered key as combination of columns defined under `columns` in defined order

@@ -17,7 +17,7 @@ config:
 
 test:
 	@echo "---- Testing ---- "
-	@$(VENV_PY3) -m mypy --ignore-missing-imports .
+	@$(VENV_PY3) -m mypy --ignore-missing-imports ./todb
 	@$(VENV_PY3) -m pytest -v --cov=./todb ./test
 
 build:
