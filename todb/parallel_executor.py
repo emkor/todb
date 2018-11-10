@@ -30,8 +30,8 @@ class ParallelExecutor(object):
         db_client.init_table(self.table_name, self.columns, self.pkey)
         initial_row_count = db_client.count(self.table_name)
 
-        unsuccessful_rows_queue = mp.JoinableQueue(
-            maxsize=QUEUE_SIZE_PER_PROCESS * self.params.processes)  # type: ignore
+        unsuccessful_rows_queue = mp.JoinableQueue(  # type: ignore
+            maxsize=QUEUE_SIZE_PER_PROCESS * self.params.processes)
         fail_row_handler = FailRowHandler(self.input_file_config, self.failed_rows_file)
         failure_handling_worker = UnsuccessfulRowsHandlingWorker(unsuccessful_rows_queue, fail_row_handler)
         failure_handling_worker.start()
