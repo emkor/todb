@@ -38,7 +38,7 @@ def _parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def _to_db(params: InputParams) -> Tuple[int, int]:
+def todb(params: InputParams) -> Tuple[int, int]:
     logger = get_logger()
     columns, pkey, file_config = parse_model_file(params.model_path)
     logger.debug("Parsed model columns: {}".format(columns))
@@ -60,7 +60,7 @@ def main(params: InputParams) -> None:
     try:
         try:
             start_time = datetime.utcnow()
-            csv_rows, db_rows = _to_db(params)
+            csv_rows, db_rows = todb(params)
             took_seconds = seconds_between(start_time)
             velocity_kBps, velocity_rows_sec = (path.getsize(
                 params.input_path) / 1000) / took_seconds, csv_rows / took_seconds
