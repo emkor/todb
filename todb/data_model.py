@@ -21,7 +21,7 @@ class InputFileConfig(Model):
         return str(self.conf_dict.get("encoding", DEFAULT_FILE_ENCODING))
 
     def has_header_row(self) -> bool:
-        return bool(self.conf_dict.get("has_header_row", DEFAULT_HAS_HEADER_ROW))
+        return bool(self.conf_dict.get("has_header", DEFAULT_HAS_HEADER_ROW))
 
     def row_delimiter(self) -> str:
         return str(self.conf_dict.get("row_delimiter", DEFAULT_ROW_DELIMITER))
