@@ -6,7 +6,7 @@ from todb.data_model import InputFileConfig
 INPUT_FILE_CONFIG = """
 {
     "encoding": "ascii",
-    "has_header_row": false,
+    "has_header": false,
     "row_delimiter": "\\t",
     "cell_delimiter": ";"
 }
