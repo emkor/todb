@@ -1,4 +1,5 @@
 import json
+import string
 from datetime import date, time, datetime
 from typing import Type, List, Tuple, Dict, Any, Union
 
@@ -39,6 +40,7 @@ _CONF_TYPE_TO_PYTHON_TYPE = {
     "int": int,
     "bigint": int,
     "float": float,
+    "latlon": float
 }
 
 _CONF_TYPE_TO_SQL_TYPE = {
@@ -50,6 +52,7 @@ _CONF_TYPE_TO_SQL_TYPE = {
     "int": Integer,
     "bigint": BigInteger,
     "float": Float,
+    "latlon": float
 }
 
 _CONF_TYPE_TO_CASS_TYPE = {
@@ -61,7 +64,16 @@ _CONF_TYPE_TO_CASS_TYPE = {
     "int": "int",
     "bigint": "bigint",
     "float": "float",
+    "latlon": "float"
 }
+
+
+def lat_lon_to_float(lat_or_lon: str) -> float:
+    lat_or_lon = lat_or_lon.replace("°", "-")
+    table = str.maketrans({key: "-" for key in string.punctuation})
+    lat_or_lon = lat_or_lon.translate(table)
+    multiplier = 1 if lat_or_lon[-1] in ['N', 'E'] else -1
+    return multiplier * sum(float(x) / 60 ** n for n, x in enumerate(lat_or_lon[:-1].split('-')))
 
 
 def get_python_type(conf_type: str) -> Type:

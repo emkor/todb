@@ -1,9 +1,9 @@
+from datetime import datetime, date, time
 from typing import Dict, List, Any, Optional
 
-from datetime import datetime, date, time
-
 from dateutil.parser import parse
-from todb.data_model import ConfColumn
+
+from todb.data_model import ConfColumn, lat_lon_to_float
 from todb.logger import get_logger
 
 BOOLEAN_MAPPINGS = {
@@ -40,7 +40,9 @@ class EntityBuilder(object):
             else:
                 raise ValueError("Value for column {} is empty!".format(column.name))
         try:
-            if column.python_type in (datetime, date, time):
+            if column.conf_type == "latlon":
+                return column.python_type(lat_lon_to_float(value))
+            elif column.python_type in (datetime, date, time):
                 parsed_time = parse(value)
                 if column.python_type == datetime:
                     return parsed_time.replace(tzinfo=None)
