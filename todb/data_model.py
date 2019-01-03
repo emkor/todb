@@ -68,12 +68,24 @@ _CONF_TYPE_TO_CASS_TYPE = {
 }
 
 
-def lat_lon_to_float(lat_or_lon: str) -> float:
+def handle_lat_lon(lat_or_lon: str) -> float:
     lat_or_lon = lat_or_lon.replace("°", "-")
     table = str.maketrans({key: "-" for key in string.punctuation})
     lat_or_lon = lat_or_lon.translate(table)
     multiplier = 1 if lat_or_lon[-1] in ['N', 'E'] else -1
     return multiplier * sum(float(x) / 60 ** n for n, x in enumerate(lat_or_lon[:-1].split('-')))
+
+
+def handle_float(value):
+    if "." in value and "," in value:
+        if value.find(",") < value.find("."):
+            return float(value.replace(",", ""))
+        else:
+            return float(value.replace(".", "").replace(",", "."))
+    elif "," in value:
+        return float(value.replace(",", "."))
+    else:
+        return float(value)
 
 
 def get_python_type(conf_type: str) -> Type:

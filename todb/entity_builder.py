@@ -3,7 +3,7 @@ from typing import Dict, List, Any, Optional
 
 from dateutil.parser import parse
 
-from todb.data_model import ConfColumn, lat_lon_to_float
+from todb.data_model import ConfColumn, handle_lat_lon, handle_float
 from todb.logger import get_logger
 
 BOOLEAN_MAPPINGS = {
@@ -41,7 +41,9 @@ class EntityBuilder(object):
                 raise ValueError("Value for column {} is empty!".format(column.name))
         try:
             if column.conf_type == "latlon":
-                return column.python_type(lat_lon_to_float(value))
+                return handle_lat_lon(value)
+            if column.conf_type == "float":
+                return handle_float(value)
             elif column.python_type in (datetime, date, time):
                 parsed_time = parse(value)
                 if column.python_type == datetime:
