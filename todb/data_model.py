@@ -52,7 +52,7 @@ _CONF_TYPE_TO_SQL_TYPE = {
     "int": Integer,
     "bigint": BigInteger,
     "float": Float,
-    "latlon": float
+    "latlon": Float
 }
 
 _CONF_TYPE_TO_CASS_TYPE = {
