@@ -73,7 +73,9 @@ def handle_lat_lon(lat_or_lon: str) -> float:
     table = str.maketrans({key: "-" for key in string.punctuation})
     lat_or_lon = lat_or_lon.translate(table)
     multiplier = 1 if lat_or_lon[-1] in ['N', 'E'] else -1
-    return multiplier * sum(float(x) / 60 ** n for n, x in enumerate(lat_or_lon[:-1].split('-')))
+    lat_or_lon_numeric_parts = [p for p in lat_or_lon[:-1].split('-') if p.isdigit()]
+    lat_or_lon_value = sum(float(x) / 60 ** n for n, x in enumerate(lat_or_lon_numeric_parts))
+    return multiplier * lat_or_lon_value
 
 
 def handle_float(value):

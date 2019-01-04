@@ -1,17 +1,15 @@
 import argparse
 import logging
 import traceback
-from typing import Tuple
-
-from todb.logger import setup_logger, get_logger
-from todb.params import InputParams
-from todb.util import seconds_between
-
 from datetime import datetime
 from os import path
+from typing import Tuple
 
 from todb.data_model import parse_model_file
+from todb.logger import setup_logger, get_logger
 from todb.parallel_executor import ParallelExecutor
+from todb.params import InputParams
+from todb.util import seconds_between
 
 EXIT_CODE_OK = 0
 EXIT_CODE_USER_ERROR = 1
@@ -82,4 +80,8 @@ def main(params: InputParams) -> None:
 
 
 if __name__ == "__main__":
-    cli_main()
+    p = InputParams(model_path="/home/mat/projects/nokia/neteng/clutter-type-poc/data/tmo_us_site_clutter.json",
+                    input_path="/home/mat/projects/nokia/neteng/clutter-type-poc/input_data/tmou_use_site@clutter.txt",
+                    sql_db="postgresql://admin:secret@localhost:5432/clutter", cass_db=None, fail_output_path=None,
+                    table_name="tmp")
+    main(p)

@@ -61,7 +61,7 @@ class EntityBuilder(object):
             else:
                 return column.python_type(value)
         except Exception as e:
-            self.logger.debug("WARNING: Could not cast {} for column {}: {}".format(value, column, e))
+            self.logger.warning("WARNING: Could not cast {} for column {}: {}".format(value, column, e))
             if column.nullable:
                 return None
             else:
